@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nestor</title>
+<style>
+  :root { --bg:#0e1116; --panel:#161b22; --panel2:#1c232c; --line:#262d36; --text:#e6edf3; --muted:#8b949e;
+          --me:#1f6feb; --accent:#d4a84b; --err:#f85149; --ok:#3fb950; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text);
+               font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Arial, sans-serif; }
+  body { display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; }
+  button { font: inherit; }
+  header { display:flex; align-items:center; gap:12px; padding:16px; border-bottom:1px solid var(--line); }
+  .orb { width:36px; height:36px; border-radius:50%; flex:none;
+         background: radial-gradient(circle at 35% 35%, #ffe7a8, var(--accent) 45%, #6b4f12);
+         box-shadow: 0 0 18px #d4a84b55; transition: transform .3s; }
+  .orb.busy { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { transform: scale(1.15); box-shadow: 0 0 28px #d4a84baa; } }
+  h1 { font-size: 18px; margin: 0; font-weight: 600; }
+  #status { font-size: 13px; color: var(--muted); }
+  #status.bad { color: var(--err); }
+  header .sp { flex:1; }
+  .hbtn { background:none; border:1px solid var(--line); color:var(--muted);
+          border-radius:8px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  #log { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .msg { max-width: 85%; padding:10px 14px; border-radius:14px; white-space:pre-wrap; word-wrap:break-word; }
+  .me { align-self:flex-end; background:var(--me); color:#fff; }
+  .bot { align-self:flex-start; background:var(--panel); border:1px solid var(--line); }
+  .act { font-size:12px; color:var(--muted); margin-top:6px; }
+  form#f { display:flex; gap:8px; padding:12px 16px 20px; border-top:1px solid var(--line); }
+  input[type=text], input[type=password] { flex:1; min-width:0; background:var(--panel); color:var(--text);
+          border:1px solid var(--line); border-radius:12px; padding:12px 14px; font-size:16px; width:100%; }
+  .primary { border:0; border-radius:12px; padding:12px 18px; cursor:pointer;
+             background:var(--accent); color:#1a1405; font-weight:600; }
+  .primary:disabled { opacity:.5; cursor:default; }
+  .ghost { background:none; border:1px solid var(--line); color:var(--text); border-radius:12px; padding:12px 18px; cursor:pointer; }
+  #mic { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:0 14px; cursor:pointer; }
+  #mic.on { background:var(--err); color:#fff; }
+
+  /* setup wizard */
+  #wiz { position:fixed; inset:0; background:var(--bg); display:none; overflow-y:auto; z-index:5; }
+  #wiz.open { display:block; }
+  .wbox { max-width:560px; margin:0 auto; padding:32px 20px 40px; }
+  .dots { display:flex; gap:6px; margin-bottom:28px; }
+  .dots i { flex:1; height:4px; border-radius:2px; background:var(--line); }
+  .dots i.on { background:var(--accent); }
+  .wbox h2 { font-size:26px; margin:0 0 8px; }
+  .wbox p.lead { color:var(--muted); margin:0 0 22px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  .chip { background:var(--panel); border:1px solid var(--line); color:var(--text); border-radius:999px; padding:8px 16px; cursor:pointer; }
+  .chip.sel { border-color:var(--accent); background:#d4a84b22; }
+  .cards { display:grid; gap:10px; }
+  .card { text-align:start; background:var(--panel); border:1px solid var(--line); color:var(--text);
+          border-radius:14px; padding:14px 16px; cursor:pointer; display:flex; gap:12px; align-items:center; }
+  .card.sel { border-color:var(--accent); background:#d4a84b1a; }
+  .card .ic { font-size:24px; width:32px; text-align:center; }
+  .card small { display:block; color:var(--muted); }
+  .grid2 { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+  .warn { color:#f0b429; font-size:14px; margin-top:10px; display:none; }
+  .warn.show { display:block; }
+  .err { color:var(--err); font-size:14px; min-height:20px; margin-top:8px; }
+  .nav { display:flex; gap:10px; margin-top:26px; }
+  .nav .primary { flex:1; }
+  .try { width:100%; margin-top:6px; }
+  .hint { color:var(--muted); font-size:14px; margin-top:18px; }
+  a { color:#f3d58e; }
+  @media (max-width: 420px) { .grid2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="orb" id="orb"></div>
+  <div><h1 id="title">Nestor</h1><div id="status">…</div></div>
+  <div class="sp"></div>
+  <button class="hbtn" id="speak" type="button"></button>
+  <button class="hbtn" id="new" type="button"></button>
+  <button class="hbtn" id="gear" type="button" aria-label="Settings">⚙︎</button>
+</header>
+<div id="log"></div>
+<form id="f">
+  <button id="mic" type="button" aria-label="Microphone">🎤</button>
+  <input id="t" type="text" autocomplete="off">
+  <button type="submit" class="primary" id="send"></button>
+</form>
+
+<div id="wiz"><div class="wbox">
+  <div class="dots" id="dots"></div>
+  <div id="step"></div>
+  <div class="err" id="werr"></div>
+  <div class="nav"><button class="ghost" id="back" type="button"></button><button class="primary" id="next" type="button"></button></div>
+</div></div>
+
+<script>
+const TRIAL_URL = "https://your-domain.com/#pricing";
+const STR = {
+  en: { ph:"What can I do for you?", send:"Send", newc:"New chat", speakOn:"🔊 Voice", speakOff:"🔇 Voice",
+    ok:"Connected · plan ", left:" · left this month: ", hello:"Good day, I'm {name}. How may I help?",
+    welcome:"Welcome", keyText:"Paste the license key from your email.", keyKeep:"Leave empty to keep your current key.",
+    trial:"No key yet? Start a free trial", cont:"Continue", back:"Back", checking:"Checking…",
+    nameQ:"What should I be called?", nameHint:"Pick one or type your own.",
+    persQ:"How should I talk?", pButler:"Butler", pButlerD:"Polite, calm, a touch of wit",
+    pFriendly:"Friendly", pFriendlyD:"Relaxed and casual", pBrief:"Brief", pBriefD:"Just the facts",
+    langQ:"Which language?", langAuto:"Automatic: answer in whatever language I'm spoken to",
+    permQ:"What may I control?", permHint:"Everything else stays read-only. You can change this later here.",
+    gLights:"Lights", gSwitches:"Switches", gClimate:"Climate & fans", gCovers:"Blinds & shades",
+    gMedia:"TV & media", gVacuum:"Vacuum", gScenes:"Scenes & scripts", gSecurity:"Locks & alarm",
+    secWarn:"Anyone who can talk to me could unlock doors or disarm the alarm.",
+    doneT:"All set!", doneText:"Let's try it. Tap below:", turnOn:"Turn on the {d}", turnOff:"Turn off the {d}",
+    fallbackTry:"What can you do?", finish:"Start talking",
+    later:"You can change anything later just by asking me, like \"be more casual\" or \"quiet hours from 10 PM to 7 AM\".",
+    sr:"en-US" },
+  es: { ph:"¿Qué puedo hacer por ti?", send:"Enviar", newc:"Nuevo chat", speakOn:"🔊 Voz", speakOff:"🔇 Voz",
+    ok:"Conectado · plan ", left:" · quedan este mes: ", hello:"Hola, soy {name}. ¿En qué puedo ayudarte?",
+    welcome:"Bienvenido", keyText:"Pega la clave de licencia de tu correo.", keyKeep:"Déjalo vacío para conservar tu clave actual.",
+    trial:"¿Aún no tienes clave? Empieza la prueba gratis", cont:"Continuar", back:"Atrás", checking:"Verificando…",
+    nameQ:"¿Cómo debo llamarme?", nameHint:"Elige uno o escribe el tuyo.",
+    persQ:"¿Cómo debo hablar?", pButler:"Mayordomo", pButlerD:"Educado, tranquilo, con un toque de humor",
+    pFriendly:"Amigable", pFriendlyD:"Relajado e informal", pBrief:"Breve", pBriefD:"Solo lo esencial",
+    langQ:"¿Qué idioma?", langAuto:"Automático: respondo en el idioma en que me hablen",
+    permQ:"¿Qué puedo controlar?", permHint:"Todo lo demás será solo lectura. Puedes cambiarlo después aquí.",
+    gLights:"Luces", gSwitches:"Interruptores", gClimate:"Clima y ventiladores", gCovers:"Persianas",
+    gMedia:"TV y medios", gVacuum:"Aspiradora", gScenes:"Escenas y scripts", gSecurity:"Cerraduras y alarma",
+    secWarn:"Cualquiera que pueda hablarme podría abrir puertas o desactivar la alarma.",
+    doneT:"¡Listo!", doneText:"Probemos. Toca abajo:", turnOn:"Enciende {d}", turnOff:"Apaga {d}",
+    fallbackTry:"¿Qué puedes hacer?", finish:"Empezar",
+    later:"Puedes cambiar todo después con solo pedírmelo, como \"sé más informal\" o \"horario silencioso de 10 PM a 7 AM\".",
+    sr:"es-US" },
+  fr: { ph:"Que puis-je faire pour vous ?", send:"Envoyer", newc:"Nouvelle discussion", speakOn:"🔊 Voix", speakOff:"🔇 Voix",
+    ok:"Connecté · offre ", left:" · restant ce mois : ", hello:"Bonjour, je suis {name}. Comment puis-je vous aider ?",
+    welcome:"Bienvenue", keyText:"Collez la clé de licence reçue par e-mail.", keyKeep:"Laissez vide pour garder votre clé actuelle.",
+    trial:"Pas encore de clé ? Commencez l'essai gratuit", cont:"Continuer", back:"Retour", checking:"Vérification…",
+    nameQ:"Comment dois-je m'appeler ?", nameHint:"Choisissez-en un ou tapez le vôtre.",
+    persQ:"Comment dois-je parler ?", pButler:"Majordome", pButlerD:"Poli, calme, avec une pointe d'humour",
+    pFriendly:"Amical", pFriendlyD:"Détendu et familier", pBrief:"Bref", pBriefD:"L'essentiel, rien de plus",
+    langQ:"Quelle langue ?", langAuto:"Automatique : je réponds dans la langue qu'on me parle",
+    permQ:"Que puis-je contrôler ?", permHint:"Le reste restera en lecture seule. Modifiable plus tard ici.",
+    gLights:"Lumières", gSwitches:"Interrupteurs", gClimate:"Climat et ventilateurs", gCovers:"Volets et stores",
+    gMedia:"TV et médias", gVacuum:"Aspirateur", gScenes:"Scènes et scripts", gSecurity:"Serrures et alarme",
+    secWarn:"Toute personne pouvant me parler pourrait ouvrir les portes ou désactiver l'alarme.",
+    doneT:"C'est prêt !", doneText:"Essayons. Touchez ci-dessous :", turnOn:"Allume {d}", turnOff:"Éteins {d}",
+    fallbackTry:"Que sais-tu faire ?", finish:"Commencer",
+    later:"Vous pouvez tout changer plus tard en me le demandant, par exemple \"sois plus décontracté\" ou \"heures calmes de 22h à 7h\".",
+    sr:"fr-FR" },
+  de: { ph:"Was kann ich für dich tun?", send:"Senden", newc:"Neuer Chat", speakOn:"🔊 Stimme", speakOff:"🔇 Stimme",
+    ok:"Verbunden · Tarif ", left:" · übrig diesen Monat: ", hello:"Guten Tag, ich bin {name}. Wie kann ich helfen?",
+    welcome:"Willkommen", keyText:"Füge den Lizenzschlüssel aus deiner E-Mail ein.", keyKeep:"Leer lassen, um den aktuellen Schlüssel zu behalten.",
+    trial:"Noch kein Schlüssel? Kostenlos testen", cont:"Weiter", back:"Zurück", checking:"Prüfe…",
+    nameQ:"Wie soll ich heißen?", nameHint:"Wähle einen oder tippe deinen eigenen.",
+    persQ:"Wie soll ich sprechen?", pButler:"Butler", pButlerD:"Höflich, ruhig, mit einem Hauch Witz",
+    pFriendly:"Freundlich", pFriendlyD:"Locker und entspannt", pBrief:"Kurz", pBriefD:"Nur das Nötigste",
+    langQ:"Welche Sprache?", langAuto:"Automatisch: Ich antworte in der Sprache, in der man mit mir spricht",
+    permQ:"Was darf ich steuern?", permHint:"Alles andere bleibt schreibgeschützt. Später hier änderbar.",
+    gLights:"Licht", gSwitches:"Schalter", gClimate:"Klima & Ventilatoren", gCovers:"Rollläden",
+    gMedia:"TV & Medien", gVacuum:"Saugroboter", gScenes:"Szenen & Skripte", gSecurity:"Schlösser & Alarm",
+    secWarn:"Jeder, der mit mir sprechen kann, könnte Türen öffnen oder den Alarm ausschalten.",
+    doneT:"Fertig!", doneText:"Probieren wir's. Tippe unten:", turnOn:"Schalte {d} ein", turnOff:"Schalte {d} aus",
+    fallbackTry:"Was kannst du?", finish:"Loslegen",
+    later:"Du kannst alles später ändern, frag mich einfach, z. B. \"sei lockerer\" oder \"Ruhezeit von 22 bis 7 Uhr\".",
+    sr:"de-DE" },
+  it: { ph:"Cosa posso fare per te?", send:"Invia", newc:"Nuova chat", speakOn:"🔊 Voce", speakOff:"🔇 Voce",
+    ok:"Connesso · piano ", left:" · rimasti questo mese: ", hello:"Buongiorno, sono {name}. Come posso aiutarti?",
+    welcome:"Benvenuto", keyText:"Incolla la chiave di licenza ricevuta via email.", keyKeep:"Lascia vuoto per mantenere la chiave attuale.",
+    trial:"Non hai una chiave? Inizia la prova gratuita", cont:"Continua", back:"Indietro", checking:"Verifica…",
+    nameQ:"Come devo chiamarmi?", nameHint:"Scegline uno o scrivi il tuo.",
+    persQ:"Come devo parlare?", pButler:"Maggiordomo", pButlerD:"Cortese, calmo, con un tocco di ironia",
+    pFriendly:"Amichevole", pFriendlyD:"Rilassato e informale", pBrief:"Breve", pBriefD:"Solo l'essenziale",
+    langQ:"Quale lingua?", langAuto:"Automatico: rispondo nella lingua in cui mi parlano",
+    permQ:"Cosa posso controllare?", permHint:"Tutto il resto sarà di sola lettura. Potrai cambiarlo qui.",
+    gLights:"Luci", gSwitches:"Interruttori", gClimate:"Clima e ventilatori", gCovers:"Tapparelle",
+    gMedia:"TV e media", gVacuum:"Robot aspirapolvere", gScenes:"Scene e script", gSecurity:"Serrature e allarme",
+    secWarn:"Chiunque possa parlarmi potrebbe aprire le porte o disattivare l'allarme.",
+    doneT:"Tutto pronto!", doneText:"Proviamo. Tocca qui sotto:", turnOn:"Accendi {d}", turnOff:"Spegni {d}",
+    fallbackTry:"Cosa sai fare?", finish:"Inizia",
+    later:"Puoi cambiare tutto in seguito chiedendomelo, ad esempio \"sii più informale\" o \"ore di silenzio dalle 22 alle 7\".",
+    sr:"it-IT" },
+  pt: { ph:"O que posso fazer por você?", send:"Enviar", newc:"Nova conversa", speakOn:"🔊 Voz", speakOff:"🔇 Voz",
+    ok:"Conectado · plano ", left:" · restam este mês: ", hello:"Olá, sou {name}. Como posso ajudar?",
+    welcome:"Bem-vindo", keyText:"Cole a chave de licença do seu e-mail.", keyKeep:"Deixe vazio para manter a chave atual.",
+    trial:"Ainda não tem chave? Comece o teste grátis", cont:"Continuar", back:"Voltar", checking:"Verificando…",
+    nameQ:"Como devo me chamar?", nameHint:"Escolha um ou digite o seu.",
+    persQ:"Como devo falar?", pButler:"Mordomo", pButlerD:"Educado, calmo, com um toque de humor",
+    pFriendly:"Amigável", pFriendlyD:"Descontraído e informal", pBrief:"Breve", pBriefD:"Só o essencial",
+    langQ:"Qual idioma?", langAuto:"Automático: respondo no idioma em que falarem comigo",
+    permQ:"O que posso controlar?", permHint:"O resto fica somente leitura. Você pode mudar isso aqui depois.",
+    gLights:"Luzes", gSwitches:"Interruptores", gClimate:"Clima e ventiladores", gCovers:"Persianas",
+    gMedia:"TV e mídia", gVacuum:"Aspirador", gScenes:"Cenas e scripts", gSecurity:"Fechaduras e alarme",
+    secWarn:"Qualquer pessoa que fale comigo poderia destrancar portas ou desarmar o alarme.",
+    doneT:"Tudo pronto!", doneText:"Vamos testar. Toque abaixo:", turnOn:"Ligue {d}", turnOff:"Desligue {d}",
+    fallbackTry:"O que você sabe fazer?", finish:"Começar",
+    later:"Você pode mudar tudo depois é só pedir, como \"seja mais descontraído\" ou \"horário silencioso das 22h às 7h\".",
+    sr:"pt-BR" },
+  ru: { ph:"Чем могу помочь?", send:"Отправить", newc:"Новый чат", speakOn:"🔊 Голос", speakOff:"🔇 Голос",
+    ok:"Подключено · тариф ", left:" · осталось в этом месяце: ", hello:"Здравствуйте, я {name}. Чем могу помочь?",
+    welcome:"Добро пожаловать", keyText:"Вставьте лицензионный ключ из письма.", keyKeep:"Оставьте пустым, чтобы сохранить текущий ключ.",
+    trial:"Нет ключа? Начните бесплатный пробный период", cont:"Далее", back:"Назад", checking:"Проверяю…",
+    nameQ:"Как меня называть?", nameHint:"Выберите имя или введите своё.",
+    persQ:"Как мне общаться?", pButler:"Дворецкий", pButlerD:"Вежливо, спокойно, с лёгким юмором",
+    pFriendly:"Дружелюбно", pFriendlyD:"Непринуждённо и просто", pBrief:"Кратко", pBriefD:"Только по делу",
+    langQ:"Какой язык?", langAuto:"Автоматически: отвечаю на том языке, на котором ко мне обращаются",
+    permQ:"Чем мне можно управлять?", permHint:"Всё остальное — только чтение. Изменить можно позже здесь.",
+    gLights:"Свет", gSwitches:"Выключатели", gClimate:"Климат и вентиляторы", gCovers:"Шторы и жалюзи",
+    gMedia:"ТВ и медиа", gVacuum:"Пылесос", gScenes:"Сцены и скрипты", gSecurity:"Замки и сигнализация",
+    secWarn:"Любой, кто может со мной говорить, сможет открыть двери или снять сигнализацию.",
+    doneT:"Готово!", doneText:"Давайте попробуем. Нажмите ниже:", turnOn:"Включи {d}", turnOff:"Выключи {d}",
+    fallbackTry:"Что ты умеешь?", finish:"Начать",
+    later:"Всё можно изменить позже, просто попросите меня, например «говори проще» или «тихие часы с 22:00 до 7:00».",
+    sr:"ru-RU" },
+  he: { ph:"מה תרצה שאעשה?", send:"שלח", newc:"שיחה חדשה", speakOn:"🔊 הקראה", speakOff:"🔇 הקראה",
+    ok:"מחובר · מסלול ", left:" · נותרו החודש: ", hello:"שלום, אני {name}. במה אוכל לעזור?",
+    welcome:"ברוך הבא", keyText:"הדבק את מפתח הרישיון מהמייל.", keyKeep:"השאר ריק כדי לשמור על המפתח הנוכחי.",
+    trial:"אין לך מפתח? התחל ניסיון חינם", cont:"המשך", back:"חזור", checking:"בודק…",
+    nameQ:"איך לקרוא לי?", nameHint:"בחר שם או הקלד שם משלך.",
+    persQ:"איך לדבר?", pButler:"משרת", pButlerD:"מנומס, רגוע, עם קצת הומור",
+    pFriendly:"חברי", pFriendlyD:"רגוע וקליל", pBrief:"קצר", pBriefD:"רק העיקר",
+    langQ:"באיזו שפה?", langAuto:"אוטומטי: עונה בשפה שמדברים איתי",
+    permQ:"מה מותר לי להפעיל?", permHint:"כל השאר לקריאה בלבד. אפשר לשנות את זה כאן בהמשך.",
+    gLights:"אורות", gSwitches:"מתגים", gClimate:"מיזוג ומאווררים", gCovers:"תריסים",
+    gMedia:"טלוויזיה ומדיה", gVacuum:"שואב רובוטי", gScenes:"סצנות וסקריפטים", gSecurity:"מנעולים ואזעקה",
+    secWarn:"כל מי שיכול לדבר איתי יוכל לפתוח דלתות או לנטרל את האזעקה.",
+    doneT:"הכל מוכן!", doneText:"בוא ננסה. לחץ למטה:", turnOn:"תדליק את {d}", turnOff:"תכבה את {d}",
+    fallbackTry:"מה אתה יודע לעשות?", finish:"להתחיל",
+    later:"אפשר לשנות הכל בהמשך פשוט לבקש ממני, למשל \"תהיה יותר קליל\" או \"שעות שקט מ-22:00 עד 7:00\".",
+    sr:"he-IL" },
+  zh: { ph:"需要我做什么？", send:"发送", newc:"新对话", speakOn:"🔊 语音", speakOff:"🔇 语音",
+    ok:"已连接 · 方案 ", left:" · 本月剩余：", hello:"您好，我是 {name}。有什么可以帮您？",
+    welcome:"欢迎", keyText:"粘贴邮件中的许可证密钥。", keyKeep:"留空则保留当前密钥。",
+    trial:"还没有密钥？开始免费试用", cont:"继续", back:"返回", checking:"正在验证…",
+    nameQ:"我该叫什么名字？", nameHint:"选一个或输入你自己的。",
+    persQ:"我该怎么说话？", pButler:"管家", pButlerD:"礼貌、沉稳，略带幽默",
+    pFriendly:"友好", pFriendlyD:"轻松随意", pBrief:"简洁", pBriefD:"只说重点",
+    langQ:"使用哪种语言？", langAuto:"自动：用对方说话的语言回答",
+    permQ:"我可以控制什么？", permHint:"其他设备仅可查看。之后可在这里更改。",
+    gLights:"灯光", gSwitches:"开关", gClimate:"空调和风扇", gCovers:"窗帘",
+    gMedia:"电视和媒体", gVacuum:"扫地机器人", gScenes:"场景和脚本", gSecurity:"门锁和警报",
+    secWarn:"任何能和我说话的人都可能打开门锁或解除警报。",
+    doneT:"设置完成！", doneText:"试一下吧，点击下方：", turnOn:"打开{d}", turnOff:"关闭{d}",
+    fallbackTry:"你能做什么？", finish:"开始对话",
+    later:"之后随时可以直接让我修改，比如\"说话随意一点\"或\"晚上10点到早上7点静音\"。",
+    sr:"zh-CN" },
+  ja: { ph:"何をしましょうか？", send:"送信", newc:"新しい会話", speakOn:"🔊 音声", speakOff:"🔇 音声",
+    ok:"接続済み · プラン ", left:" · 今月の残り: ", hello:"こんにちは、{name}です。ご用件は？",
+    welcome:"ようこそ", keyText:"メールに記載のライセンスキーを貼り付けてください。", keyKeep:"空欄のままなら現在のキーを使います。",
+    trial:"キーをお持ちでない方は無料トライアルへ", cont:"次へ", back:"戻る", checking:"確認中…",
+    nameQ:"私の名前は？", nameHint:"選ぶか、自由に入力してください。",
+    persQ:"話し方は？", pButler:"執事", pButlerD:"丁寧で落ち着いた、少しユーモアのある話し方",
+    pFriendly:"フレンドリー", pFriendlyD:"気軽でカジュアル", pBrief:"簡潔", pBriefD:"要点だけ",
+    langQ:"言語は？", langAuto:"自動：話しかけられた言語で答えます",
+    permQ:"何を操作してよいですか？", permHint:"それ以外は閲覧のみです。あとからここで変更できます。",
+    gLights:"照明", gSwitches:"スイッチ", gClimate:"空調と扇風機", gCovers:"ブラインド",
+    gMedia:"テレビとメディア", gVacuum:"ロボット掃除機", gScenes:"シーンとスクリプト", gSecurity:"鍵と警報",
+    secWarn:"私と話せる人なら誰でも、ドアの解錠や警報の解除ができてしまいます。",
+    doneT:"準備完了！", doneText:"試してみましょう。下をタップ：", turnOn:"{d}をつけて", turnOff:"{d}を消して",
+    fallbackTry:"何ができるの？", finish:"始める",
+    later:"あとからいつでも頼むだけで変更できます。例：「もっとくだけて」「夜10時から朝7時は静かに」。",
+    sr:"ja-JP" },
+};
+const LANG_NAMES = { en:"English", es:"Español", fr:"Français", de:"Deutsch", it:"Italiano",
+  pt:"Português", ru:"Русский", he:"עברית", zh:"中文", ja:"日本語" };
+const GROUPS = [
+  { k:"gLights", ic:"💡", d:["light"] },
+  { k:"gSwitches", ic:"🔌", d:["switch", "input_boolean"] },
+  { k:"gClimate", ic:"❄️", d:["climate", "fan", "humidifier", "water_heater"] },
+  { k:"gCovers", ic:"🪟", d:["cover"] },
+  { k:"gMedia", ic:"📺", d:["media_player"] },
+  { k:"gVacuum", ic:"🧹", d:["vacuum"] },
+  { k:"gScenes", ic:"✨", d:["scene", "script"] },
+];
+
+const $ = (id) => document.getElementById(id);
+const BROWSER = (navigator.language || "en").toLowerCase().split("-")[0];
+let S = null;            // settings from the add-on
+let T = STR.en, LANG = "en";
+let cid = Math.random().toString(36).slice(2);
+
+function applyLang() {
+  LANG = STR[S.language] ? S.language : (STR[BROWSER] ? BROWSER : "en");
+  T = STR[LANG];
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === "he" ? "rtl" : "ltr";
+  $("title").textContent = S.assistant_name; document.title = S.assistant_name;
+  $("t").placeholder = T.ph; $("send").textContent = T.send; $("new").textContent = T.newc;
+  $("speak").textContent = S.speak_replies ? T.speakOn : T.speakOff;
+  if (rec) rec.lang = T.sr;
+}
+
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} :
+    { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) });
+  return r.json();
+}
+async function saveSettings(changes) {
+  const r = await api("api/settings", changes);
+  if (r.ok) { S = r.settings; applyLang(); }
+  return r;
+}
+
+/* ---------- chat ---------- */
+function add(text, who, actions) {
+  const d = document.createElement("div");
+  d.className = "msg " + who; d.textContent = text;
+  if (actions && actions.length) {
+    const a = document.createElement("div"); a.className = "act";
+    a.textContent = actions.map(x => (x.ok ? "✓ " : "✗ ") + x.call.domain + "." + x.call.service +
+      " → " + (x.call.entity_ids || []).join(", ")).join("\n");
+    d.appendChild(a);
+  }
+  $("log").appendChild(d); $("log").scrollTop = $("log").scrollHeight;
+}
+function say(text) {
+  if (!window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(text); u.lang = T.sr;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+async function status() {
+  try {
+    const r = await api("api/status?lang=" + LANG);
+    if (r.ok) { $("status").textContent = T.ok + r.plan + T.left + r.quota_remaining; $("status").className = ""; }
+    else { $("status").textContent = r.message; $("status").className = "bad"; }
+  } catch (e) { $("status").textContent = "—"; }
+}
+async function send(text) {
+  add(text, "me"); $("orb").classList.add("busy"); $("send").disabled = true;
+  try {
+    const data = await api("api/chat", { text, conversation_id: cid, ui_language: navigator.language || LANG });
+    add(data.reply, "bot", data.actions);
+    if (data.speak) say(data.reply);
+    if (data.settings_changed) { S = await api("api/settings"); applyLang(); }
+    if (data.quota_remaining != null) status();
+  } catch (e) { add("⚠️", "bot"); }
+  $("orb").classList.remove("busy"); $("send").disabled = false;
+}
+$("f").addEventListener("submit", (e) => {
+  e.preventDefault(); const v = $("t").value.trim(); if (!v) return; $("t").value = ""; send(v);
+});
+$("new").onclick = () => {
+  api("api/reset", { conversation_id: cid });
+  cid = Math.random().toString(36).slice(2); $("log").innerHTML = "";
+  add(T.hello.replace("{name}", S.assistant_name), "bot");
+};
+$("speak").onclick = () => saveSettings({ speak_replies: !S.speak_replies });
+$("gear").onclick = () => openWizard(true);
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
+if (!SR) $("mic").style.display = "none";
+else {
+  rec = new SR(); rec.interimResults = false;
+  rec.onresult = (e) => { const v = e.results[0][0].transcript; if (v) send(v); };
+  rec.onend = () => $("mic").classList.remove("on");
+  $("mic").onclick = () => { $("mic").classList.add("on"); try { rec.start(); } catch (e) {} };
+}
+
+/* ---------- setup wizard ---------- */
+const STEPS = ["key", "name", "personality", "language", "permissions", "done"];
+let step = 0, draft = {}, editing = false, suggestion = null;
+
+function openWizard(isEdit) {
+  editing = isEdit;
+  draft = { assistant_name: S.assistant_name, personality: S.personality, language: S.language,
+            allowed_domains: [...S.allowed_domains], allow_security_devices: S.allow_security_devices };
+  step = 0; $("wiz").classList.add("open"); render();
+}
+function chip(label, selected, onclick) {
+  const b = document.createElement("button"); b.type = "button";
+  b.className = "chip" + (selected ? " sel" : ""); b.textContent = label; b.onclick = onclick; return b;
+}
+function card(icon, title, sub, selected, onclick) {
+  const b = document.createElement("button"); b.type = "button"; b.className = "card" + (selected ? " sel" : "");
+  b.innerHTML = '<span class="ic"></span><span><b></b><small></small></span>';
+  b.querySelector(".ic").textContent = icon; b.querySelector("b").textContent = title;
+  b.querySelector("small").textContent = sub || ""; b.onclick = onclick; return b;
+}
+function h(tag, text, cls) { const e = document.createElement(tag); e.textContent = text; if (cls) e.className = cls; return e; }
+
+function render() {
+  const box = $("step"); box.innerHTML = ""; $("werr").textContent = "";
+  $("dots").innerHTML = STEPS.map((_, i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("");
+  $("back").textContent = T.back; $("back").style.visibility = step === 0 && !editing ? "hidden" : "visible";
+  $("next").textContent = STEPS[step] === "done" ? T.finish : T.cont; $("next").disabled = false;
+  const name = STEPS[step];
+
+  if (name === "key") {
+    box.append(h("h2", T.welcome), h("p", S.has_license_key ? T.keyKeep : T.keyText, "lead"));
+    const inp = document.createElement("input"); inp.type = "password"; inp.id = "wkey";
+    inp.placeholder = "XXXX-XXXX-XXXX"; inp.autocomplete = "off"; box.append(inp);
+    if (!S.has_license_key) {
+      const a = document.createElement("a"); a.href = TRIAL_URL; a.target = "_blank"; a.rel = "noopener";
+      a.textContent = T.trial; const p = h("p", "", "hint"); p.append(a); box.append(p);
+    }
+  }
+  if (name === "name") {
+    box.append(h("h2", T.nameQ), h("p", T.nameHint, "lead"));
+    const chips = h("div", "", "chips");
+    ["Nestor", "Jarvis", "Alfred", "Max", "Ava"].forEach(n =>
+      chips.append(chip(n, draft.assistant_name === n, () => { draft.assistant_name = n; render(); })));
+    const inp = document.createElement("input"); inp.type = "text"; inp.maxLength = 40;
+    inp.value = draft.assistant_name; inp.oninput = () => { draft.assistant_name = inp.value; };
+    box.append(chips, inp);
+  }
+  if (name === "personality") {
+    box.append(h("h2", T.persQ));
+    const c = h("div", "", "cards");
+    [["butler", "🎩", T.pButler, T.pButlerD], ["friendly", "😊", T.pFriendly, T.pFriendlyD],
+     ["brief", "⚡", T.pBrief, T.pBriefD]].forEach(([k, ic, t, d]) =>
+      c.append(card(ic, t, d, draft.personality === k, () => { draft.personality = k; render(); })));
+    box.append(c);
+  }
+  if (name === "language") {
+    box.append(h("h2", T.langQ));
+    const c = h("div", "", "cards");
+    c.append(card("🌍", T.langAuto, "", draft.language === "auto", () => { draft.language = "auto"; render(); }));
+    const chips = h("div", "", "chips"); chips.style.marginTop = "12px";
+    Object.entries(LANG_NAMES).forEach(([k, n]) =>
+      chips.append(chip(n, draft.language === k, () => { draft.language = k; render(); })));
+    box.append(c, chips);
+  }
+  if (name === "permissions") {
+    box.append(h("h2", T.permQ), h("p", T.permHint, "lead"));
+    const g = h("div", "", "grid2");
+    GROUPS.forEach(grp => {
+      const on = grp.d.every(d => draft.allowed_domains.includes(d));
+      g.append(card(grp.ic, T[grp.k], "", on, () => {
+        draft.allowed_domains = draft.allowed_domains.filter(d => !grp.d.includes(d));
+        if (!on) draft.allowed_domains.push(...grp.d);
+        render();
+      }));
+    });
+    g.append(card("🔒", T.gSecurity, "", draft.allow_security_devices,
+      () => { draft.allow_security_devices = !draft.allow_security_devices; render(); }));
+    const w = h("div", "⚠️ " + T.secWarn, "warn" + (draft.allow_security_devices ? " show" : ""));
+    box.append(g, w);
+  }
+  if (name === "done") {
+    box.append(h("h2", T.doneT), h("p", T.doneText, "lead"));
+    const cmd = suggestion && suggestion.name
+      ? (suggestion.state === "on" ? T.turnOff : T.turnOn).replace("{d}", suggestion.name)
+      : T.fallbackTry;
+    const b = card("👉", "“" + cmd + "”", "", true, () => finish(cmd)); b.classList.add("try");
+    box.append(b, h("p", T.later, "hint"));
+  }
+}
+
+$("back").onclick = () => {
+  if (step === 0) { $("wiz").classList.remove("open"); return; }
+  step--; render();
+};
+$("next").onclick = async () => {
+  const name = STEPS[step];
+  if (name === "key") {
+    const key = $("wkey").value.trim();
+    if (!key && !S.has_license_key) { $("werr").textContent = T.keyText; return; }
+    if (key) {
+      $("next").disabled = true; $("next").textContent = T.checking;
+      const r = await api("api/setup/license", { license_key: key });
+      if (!r.ok) { $("werr").textContent = r.message; $("next").disabled = false; $("next").textContent = T.cont; return; }
+      S.has_license_key = true;
+    }
+  }
+  if (name === "name" && !draft.assistant_name.trim()) return;
+  if (name === "language") { S.language = draft.language; applyLang(); }
+  if (name === "permissions") {
+    const r = await saveSettings({ ...draft, onboarded: true });
+    if (!r.ok) { $("werr").textContent = r.message; return; }
+    try { suggestion = await api("api/setup/suggestion"); } catch (e) { suggestion = null; }
+  }
+  if (name === "done") { finish(null); return; }
+  step++; render();
+};
+function finish(cmd) {
+  $("wiz").classList.remove("open");
+  $("log").innerHTML = ""; add(T.hello.replace("{name}", S.assistant_name), "bot");
+  status();
+  if (cmd) send(cmd);
+}
+
+/* ---------- start ---------- */
+(async () => {
+  S = await api("api/settings");
+  applyLang();
+  if (!S.onboarded) { openWizard(false); return; }
+  add(T.hello.replace("{name}", S.assistant_name), "bot");
+  status();
+})();
+</script>
+</body>
+</html>

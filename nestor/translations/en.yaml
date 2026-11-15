@@ -1,0 +1,7 @@
+configuration:
+  license_key:
+    name: License key (optional)
+    description: You can also enter it in the Nestor panel. Everything else is set up there.
+  cloud_url:
+    name: Service address
+    description: Leave as is unless support asks you to change it.

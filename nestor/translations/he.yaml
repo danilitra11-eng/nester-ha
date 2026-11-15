@@ -1,0 +1,7 @@
+configuration:
+  license_key:
+    name: מפתח רישיון (לא חובה)
+    description: אפשר להזין אותו גם בפאנל של Nestor. את כל השאר מגדירים שם.
+  cloud_url:
+    name: כתובת השירות
+    description: לא לשנות אלא אם התמיכה ביקשה.
