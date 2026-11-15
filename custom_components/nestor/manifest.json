@@ -1,0 +1,14 @@
+{
+  "domain": "nestor",
+  "name": "Nestor AI Butler",
+  "codeowners": ["@danilitra11-eng"],
+  "config_flow": true,
+  "dependencies": ["conversation", "http", "frontend", "panel_custom", "websocket_api"],
+  "after_dependencies": ["assist_pipeline", "tts", "stt", "ffmpeg", "lovelace"],
+  "documentation": "https://github.com/danilitra11-eng/nester-ha",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/danilitra11-eng/nester-ha/issues",
+  "requirements": [],
+  "version": "0.2.0"
+}

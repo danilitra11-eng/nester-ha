@@ -1,0 +1,130 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Welcome to Nestor",
+        "description": "**Step 1 of 6.** Paste the license key from the email you got after subscribing, then select **Submit**.\n\nNo key yet? [Start a 7-day free trial]({trial_url}). Need help? [Setup guide]({help_url}).",
+        "data": {
+          "license_key": "License key",
+          "cloud_url": "Service address"
+        },
+        "data_description": {
+          "license_key": "Looks like XXXX-XXXX-XXXX. Copy it from the email exactly, without spaces.",
+          "cloud_url": "Leave this as it is unless Nestor support asked you to change it."
+        }
+      },
+      "name": {
+        "title": "Name your butler",
+        "description": "**Step 2 of 6.** Pick a name or type your own. Your butler introduces itself with it, and you can say it when you talk to it.",
+        "data": {
+          "assistant_name": "Name"
+        }
+      },
+      "personality": {
+        "title": "How should {name} talk?",
+        "description": "**Step 3 of 6.** You can change this any time just by asking, for example \"be more casual\".",
+        "data": {
+          "personality": "Personality"
+        }
+      },
+      "language": {
+        "title": "Which language?",
+        "description": "**Step 4 of 6.** With **Automatic**, Nestor answers in whatever language you speak to it — handy when family members speak different languages.",
+        "data": {
+          "language": "Language"
+        }
+      },
+      "permissions": {
+        "title": "What may {name} do?",
+        "description": "**Step 5 of 6.** Tick what your butler may control or change. Anything not ticked stays read-only: it can still tell you about it, but can't change it.\n\n⚠️ **Locks and alarm**: anyone who can talk to your butler could unlock doors or disarm the alarm. Only tick it if you're comfortable with that.\n\nYou can change this later in **Settings → Devices & services → Nestor → Configure**.",
+        "data": {
+          "permissions": "Permissions"
+        }
+      },
+      "voice": {
+        "title": "Choose {name}'s voice",
+        "description": "**Step 6 of 6.** These are the voices installed in your Home Assistant. To listen to them before choosing, finish setup and open **Nestor** in the sidebar → ⚙︎ → Voice → ▶.",
+        "data": {
+          "voice": "Voice",
+          "make_voice_assistant": "Make Nestor my voice assistant",
+          "speak_replies": "Read replies aloud in the Nestor panel"
+        },
+        "data_description": {
+          "voice": "Want more voices? Add the free **Piper** voices or Home Assistant Cloud — see the voices guide.",
+          "make_voice_assistant": "Recommended. Your phone's Home Assistant app, watch and voice speakers will talk to Nestor. Your current settings for microphone and wake word are kept.",
+          "speak_replies": "You can set quiet hours later by asking, for example \"quiet hours from 10 PM to 7 AM\"."
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "That license key isn't valid. Copy it again from the email, without spaces.",
+      "subscription_inactive": "This subscription isn't active. Renew it from the link in your receipt email, then try again.",
+      "too_many_instances": "This key is already used on the maximum number of homes for its plan. Contact support to move it.",
+      "offline": "Can't reach the Nestor service. Check this Home Assistant's internet connection and try again.",
+      "generic": "Something went wrong. Please try again in a minute."
+    },
+    "abort": {
+      "already_configured": "Nestor is already set up. To change settings, go to Settings → Devices & services → Nestor → Configure."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nestor settings",
+        "description": "Change how your butler behaves. Name, personality, language and quiet hours can also be changed just by asking it.",
+        "data": {
+          "assistant_name": "Name",
+          "personality": "Personality",
+          "language": "Language",
+          "permissions": "Permissions",
+          "voice": "Voice",
+          "make_voice_assistant": "Make Nestor my voice assistant",
+          "speak_replies": "Read replies aloud in the Nestor panel"
+        },
+        "data_description": {
+          "voice": "Want more voices? Add the free **Piper** voices or Home Assistant Cloud — see the voices guide.",
+          "make_voice_assistant": "Recommended. Your phone's Home Assistant app, watch and voice speakers will talk to Nestor. Your current settings for microphone and wake word are kept.",
+          "speak_replies": "You can set quiet hours later by asking, for example \"quiet hours from 10 PM to 7 AM\"."
+        }
+      }
+    }
+  },
+  "selector": {
+    "personality": {
+      "options": {
+        "butler": "Butler — polite, calm, a touch of wit",
+        "friendly": "Friendly — relaxed and casual",
+        "brief": "Brief — just the facts"
+      }
+    },
+    "language": {
+      "options": {
+        "en": "English",
+        "es": "Español",
+        "fr": "Français",
+        "de": "Deutsch",
+        "it": "Italiano",
+        "pt": "Português",
+        "ru": "Русский",
+        "he": "עברית",
+        "zh": "中文",
+        "ja": "日本語",
+        "auto": "Automatic — answer in the language I'm spoken to"
+      }
+    },
+    "permissions": {
+      "options": {
+        "lights": "💡 Lights",
+        "switches": "🔌 Switches",
+        "climate": "❄️ Climate, fans, water heater",
+        "covers": "🪟 Blinds, shades, garage doors",
+        "media": "📺 TV and media players",
+        "vacuum": "🧹 Robot vacuum and mower",
+        "scenes": "✨ Scenes and scripts",
+        "security": "🔒 Locks and alarm (see warning above)",
+        "structure": "🏠 Edit home structure: rooms, floors, names",
+        "design": "🎨 Create and edit dashboards and themes"
+      }
+    }
+  }
+}

@@ -1,14 +1,23 @@
-# Nestor for Home Assistant
+# Nestor AI Butler for Home Assistant
 
-[![Add repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fdanilitra11-eng%2Fnester-ha)
+Talk to your home like a person — in any language, by text, voice or Telegram.
 
-An AI butler for your smart home. Click the button above, or in Home Assistant go to
-**Settings → Add-ons → Add-on Store → ⋮ → Repositories** and add:
+- **Controls your devices**: "turn off everything downstairs and set the bedroom to 70".
+- **Edits your home's structure**: creates rooms and floors, moves and renames devices.
+- **Designs dashboards and themes** on request, with undo.
+- **Talks back** in a voice you choose, from the Home Assistant app, your watch, voice speakers, or Telegram.
+- **You set the limits**: choose what it may control; locks and alarms are off by default; it always asks before deleting anything.
 
-```
-https://github.com/danilitra11-eng/nester-ha
-```
+Requires a Nestor subscription (7-day free trial): **https://your-domain.com**
 
-Then install **Nestor AI Butler**. Requires Home Assistant OS or Supervised.
+## Install
 
-Plans and free trial: https://your-domain.com
+1. In Home Assistant: **Settings → Marketplace**, search **Nestor**, **Download** — or **⋮ → Add from a GitHub link** and paste `https://github.com/danilitra11-eng/nester-ha`.
+2. Restart Home Assistant.
+3. **Settings → Devices & services → + Add integration → Nestor**, and follow the one-minute wizard.
+
+Step-by-step guides with screenshots: [docs/guides](docs/guides/README.md)
+
+## Privacy
+
+To answer you, Nestor sends your message and the names and states of the devices involved to the Nestor service. Actions run locally in your Home Assistant, under the permissions you set.

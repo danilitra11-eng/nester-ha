@@ -1,0 +1,130 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ברוך הבא ל-Nestor",
+        "description": "**שלב 1 מתוך 6.** הדבק את מפתח הרישיון מהמייל שקיבלת אחרי ההרשמה, ולחץ **Submit**.\n\nאין לך מפתח? [התחל ניסיון חינם ל-7 ימים]({trial_url}). צריך עזרה? [מדריך ההתקנה]({help_url}).",
+        "data": {
+          "license_key": "מפתח רישיון",
+          "cloud_url": "כתובת השירות"
+        },
+        "data_description": {
+          "license_key": "נראה כמו XXXX-XXXX-XXXX. העתק אותו מהמייל בדיוק, בלי רווחים.",
+          "cloud_url": "השאר כמו שזה, אלא אם התמיכה של Nestor ביקשה לשנות."
+        }
+      },
+      "name": {
+        "title": "תן שם למשרת שלך",
+        "description": "**שלב 2 מתוך 6.** בחר שם או הקלד שם משלך.",
+        "data": {
+          "assistant_name": "שם"
+        }
+      },
+      "personality": {
+        "title": "איך {name} ידבר?",
+        "description": "**שלב 3 מתוך 6.** אפשר לשנות בכל רגע פשוט לבקש, למשל \"תהיה יותר קליל\".",
+        "data": {
+          "personality": "אישיות"
+        }
+      },
+      "language": {
+        "title": "באיזו שפה?",
+        "description": "**שלב 4 מתוך 6.** במצב **אוטומטי**, Nestor עונה בשפה שמדברים איתו.",
+        "data": {
+          "language": "שפה"
+        }
+      },
+      "permissions": {
+        "title": "מה {name} רשאי לעשות?",
+        "description": "**שלב 5 מתוך 6.** סמן מה מותר למשרת להפעיל או לשנות. כל השאר לקריאה בלבד.\n\n⚠️ **מנעולים ואזעקה**: כל מי שמדבר עם המשרת יוכל לפתוח דלתות או לנטרל אזעקה.\n\nאפשר לשנות אחר כך ב-**Settings → Devices & services → Nestor → Configure**.",
+        "data": {
+          "permissions": "הרשאות"
+        }
+      },
+      "voice": {
+        "title": "בחר קול ל-{name}",
+        "description": "**שלב 6 מתוך 6.** אלה הקולות שמותקנים ב-Home Assistant שלך. כדי לשמוע אותם, סיים את ההתקנה ופתח את **Nestor** בתפריט הצד ← ⚙︎ ← קול ← ▶.",
+        "data": {
+          "voice": "קול",
+          "make_voice_assistant": "להפוך את Nestor לעוזר הקולי שלי",
+          "speak_replies": "להקריא תשובות בפאנל של Nestor"
+        },
+        "data_description": {
+          "voice": "רוצה עוד קולות? הוסף את הקולות החינמיים של **Piper** או את Home Assistant Cloud.",
+          "make_voice_assistant": "מומלץ. אפליקציית HA בטלפון, השעון והרמקולים ידברו עם Nestor.",
+          "speak_replies": "אפשר לקבוע שעות שקט פשוט לבקש, למשל \"שעות שקט מ-22:00 עד 7:00\"."
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "המפתח לא תקין. העתק אותו שוב מהמייל, בלי רווחים.",
+      "subscription_inactive": "המנוי לא פעיל. חדש אותו מהקישור במייל הקבלה ונסה שוב.",
+      "too_many_instances": "המפתח כבר בשימוש במספר הבתים המרבי של המסלול. פנה לתמיכה.",
+      "offline": "אין חיבור לשירות של Nestor. בדוק את החיבור לאינטרנט ונסה שוב.",
+      "generic": "משהו השתבש. נסה שוב בעוד דקה."
+    },
+    "abort": {
+      "already_configured": "Nestor כבר מוגדר. לשינוי הגדרות: Settings → Devices & services → Nestor → Configure."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "הגדרות Nestor",
+        "description": "שנה איך המשרת מתנהג.",
+        "data": {
+          "assistant_name": "שם",
+          "personality": "אישיות",
+          "language": "שפה",
+          "permissions": "הרשאות",
+          "voice": "קול",
+          "make_voice_assistant": "להפוך את Nestor לעוזר הקולי שלי",
+          "speak_replies": "להקריא תשובות בפאנל של Nestor"
+        },
+        "data_description": {
+          "voice": "רוצה עוד קולות? הוסף את הקולות החינמיים של **Piper** או את Home Assistant Cloud.",
+          "make_voice_assistant": "מומלץ. אפליקציית HA בטלפון, השעון והרמקולים ידברו עם Nestor.",
+          "speak_replies": "אפשר לקבוע שעות שקט פשוט לבקש, למשל \"שעות שקט מ-22:00 עד 7:00\"."
+        }
+      }
+    }
+  },
+  "selector": {
+    "personality": {
+      "options": {
+        "butler": "משרת — מנומס, רגוע, עם קצת הומור",
+        "friendly": "חברי — רגוע וקליל",
+        "brief": "קצר — רק העיקר"
+      }
+    },
+    "language": {
+      "options": {
+        "en": "English",
+        "es": "Español",
+        "fr": "Français",
+        "de": "Deutsch",
+        "it": "Italiano",
+        "pt": "Português",
+        "ru": "Русский",
+        "he": "עברית",
+        "zh": "中文",
+        "ja": "日本語",
+        "auto": "אוטומטי — לענות בשפה שמדברים איתי"
+      }
+    },
+    "permissions": {
+      "options": {
+        "lights": "💡 אורות",
+        "switches": "🔌 מתגים",
+        "climate": "❄️ מיזוג, מאווררים, דוד",
+        "covers": "🪟 תריסים ודלתות מוסך",
+        "media": "📺 טלוויזיה ומדיה",
+        "vacuum": "🧹 שואב ומכסחה רובוטיים",
+        "scenes": "✨ סצנות וסקריפטים",
+        "security": "🔒 מנעולים ואזעקה (ראה אזהרה)",
+        "structure": "🏠 עריכת מבנה הבית: חדרים, קומות, שמות",
+        "design": "🎨 יצירה ועריכה של דשבורדים וערכות עיצוב"
+      }
+    }
+  }
+}

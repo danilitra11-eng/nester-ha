@@ -1,0 +1,130 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Bienvenido a Nestor",
+        "description": "**Paso 1 de 6.** Pega la clave de licencia del correo que recibiste al suscribirte y selecciona **Enviar**.\n\n¿Aún no tienes clave? [Empieza la prueba gratis de 7 días]({trial_url}). ¿Necesitas ayuda? [Guía de instalación]({help_url}).",
+        "data": {
+          "license_key": "Clave de licencia",
+          "cloud_url": "Dirección del servicio"
+        },
+        "data_description": {
+          "license_key": "Tiene la forma XXXX-XXXX-XXXX. Cópiala del correo tal cual, sin espacios.",
+          "cloud_url": "Déjala como está, salvo que soporte de Nestor te pida cambiarla."
+        }
+      },
+      "name": {
+        "title": "Ponle nombre a tu mayordomo",
+        "description": "**Paso 2 de 6.** Elige un nombre o escribe el tuyo.",
+        "data": {
+          "assistant_name": "Nombre"
+        }
+      },
+      "personality": {
+        "title": "¿Cómo debe hablar {name}?",
+        "description": "**Paso 3 de 6.** Puedes cambiarlo cuando quieras pidiéndolo, por ejemplo \"sé más informal\".",
+        "data": {
+          "personality": "Personalidad"
+        }
+      },
+      "language": {
+        "title": "¿Qué idioma?",
+        "description": "**Paso 4 de 6.** Con **Automático**, Nestor responde en el idioma en que le hablen.",
+        "data": {
+          "language": "Idioma"
+        }
+      },
+      "permissions": {
+        "title": "¿Qué puede hacer {name}?",
+        "description": "**Paso 5 de 6.** Marca lo que tu mayordomo puede controlar o cambiar. Lo demás queda solo de lectura.\n\n⚠️ **Cerraduras y alarma**: cualquiera que hable con tu mayordomo podría abrir puertas o desactivar la alarma.\n\nPuedes cambiarlo después en **Ajustes → Dispositivos y servicios → Nestor → Configurar**.",
+        "data": {
+          "permissions": "Permisos"
+        }
+      },
+      "voice": {
+        "title": "Elige la voz de {name}",
+        "description": "**Paso 6 de 6.** Estas son las voces instaladas en tu Home Assistant. Para escucharlas, termina la instalación y abre **Nestor** en la barra lateral → ⚙︎ → Voz → ▶.",
+        "data": {
+          "voice": "Voz",
+          "make_voice_assistant": "Usar Nestor como mi asistente de voz",
+          "speak_replies": "Leer las respuestas en voz alta en el panel"
+        },
+        "data_description": {
+          "voice": "¿Quieres más voces? Agrega las voces gratuitas de **Piper** o Home Assistant Cloud.",
+          "make_voice_assistant": "Recomendado. La app de Home Assistant, el reloj y los altavoces hablarán con Nestor.",
+          "speak_replies": "Puedes fijar horas de silencio pidiéndolo, por ejemplo \"silencio de 10 PM a 7 AM\"."
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "Esa clave no es válida. Cópiala de nuevo del correo, sin espacios.",
+      "subscription_inactive": "La suscripción no está activa. Renuévala desde el enlace de tu recibo.",
+      "too_many_instances": "Esta clave ya se usa en el máximo de hogares de su plan. Contacta a soporte.",
+      "offline": "No se puede conectar con Nestor. Revisa la conexión a internet.",
+      "generic": "Algo salió mal. Inténtalo en un minuto."
+    },
+    "abort": {
+      "already_configured": "Nestor ya está configurado. Ve a Ajustes → Dispositivos y servicios → Nestor → Configurar."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ajustes de Nestor",
+        "description": "Cambia cómo se comporta tu mayordomo.",
+        "data": {
+          "assistant_name": "Nombre",
+          "personality": "Personalidad",
+          "language": "Idioma",
+          "permissions": "Permisos",
+          "voice": "Voz",
+          "make_voice_assistant": "Usar Nestor como mi asistente de voz",
+          "speak_replies": "Leer las respuestas en voz alta en el panel"
+        },
+        "data_description": {
+          "voice": "¿Quieres más voces? Agrega las voces gratuitas de **Piper** o Home Assistant Cloud.",
+          "make_voice_assistant": "Recomendado. La app de Home Assistant, el reloj y los altavoces hablarán con Nestor.",
+          "speak_replies": "Puedes fijar horas de silencio pidiéndolo, por ejemplo \"silencio de 10 PM a 7 AM\"."
+        }
+      }
+    }
+  },
+  "selector": {
+    "personality": {
+      "options": {
+        "butler": "Mayordomo — educado, tranquilo, con humor",
+        "friendly": "Amigable — relajado e informal",
+        "brief": "Breve — solo lo esencial"
+      }
+    },
+    "language": {
+      "options": {
+        "en": "English",
+        "es": "Español",
+        "fr": "Français",
+        "de": "Deutsch",
+        "it": "Italiano",
+        "pt": "Português",
+        "ru": "Русский",
+        "he": "עברית",
+        "zh": "中文",
+        "ja": "日本語",
+        "auto": "Automático — responder en el idioma en que me hablen"
+      }
+    },
+    "permissions": {
+      "options": {
+        "lights": "💡 Luces",
+        "switches": "🔌 Interruptores",
+        "climate": "❄️ Clima, ventiladores, calentador",
+        "covers": "🪟 Persianas y puertas de garaje",
+        "media": "📺 TV y reproductores",
+        "vacuum": "🧹 Robot aspirador y cortacésped",
+        "scenes": "✨ Escenas y scripts",
+        "security": "🔒 Cerraduras y alarma (ver aviso)",
+        "structure": "🏠 Editar la estructura: habitaciones, pisos, nombres",
+        "design": "🎨 Crear y editar paneles y temas"
+      }
+    }
+  }
+}
