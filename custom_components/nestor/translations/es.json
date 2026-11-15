@@ -123,7 +123,9 @@
         "scenes": "✨ Escenas y scripts",
         "security": "🔒 Cerraduras y alarma (ver aviso)",
         "structure": "🏠 Editar la estructura: habitaciones, pisos, nombres",
-        "design": "🎨 Crear y editar paneles y temas"
+        "design": "🎨 Crear y editar paneles y temas",
+        "automations": "⚙️ Crear automatizaciones",
+        "cameras": "📷 Ver las cámaras (Pro)"
       }
     }
   }

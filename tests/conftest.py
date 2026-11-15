@@ -29,6 +29,7 @@ class ScriptedCloud:
     def __init__(self) -> None:
         self.script: list[dict | Callable[[list], dict]] = []
         self.requests: list[dict[str, Any]] = []
+        self.notified = []
 
     def say(self, text: str) -> None:
         self.script.append({"content": [{"type": "text", "text": text}], "stop_reason": "end_turn",
@@ -44,8 +45,20 @@ class ScriptedCloud:
         item = self.script.pop(0)
         return item(messages) if callable(item) else item
 
+    features = ["control", "structure", "design", "telegram", "alerts_basic", "report", "alerts",
+                "doctor", "memory", "profiles", "automations", "suggestions", "vision", "guests",
+                "vacation"]
+    notified: list = []
+
     async def verify(self, key=None):
-        return {"valid": True, "plan": "family", "quota_remaining": 100}
+        return {"valid": True, "plan": "pro", "quota_remaining": 100, "features": self.features}
+
+    async def telegram_notify(self, text, buttons=None):
+        self.notified.append((text, buttons))
+        return 1
+
+    async def vision(self, jpeg, question, language):
+        return {"text": "a delivery driver holding a box"}
 
     async def telegram_status(self):
         return {"linked": False, "bot_username": "NestorHomeBot"}

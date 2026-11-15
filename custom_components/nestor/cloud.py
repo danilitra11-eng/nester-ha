@@ -57,10 +57,30 @@ class CloudClient:
             "addon_version": VERSION,
         })
 
+    async def vision(self, jpeg: bytes, question: str, language: str) -> dict[str, Any]:
+        import base64
+        return await self._post("/v1/vision", {"image_b64": base64.b64encode(jpeg).decode(),
+                                                "question": question, "language": language},
+                                timeout=60)
+
     # ---- Telegram relay ------------------------------------------------
 
-    async def telegram_pair(self) -> dict[str, Any]:
-        return await self._post("/v1/telegram/pair", {}, timeout=20)
+    async def telegram_pair(self, role: str = "member", profile: str | None = None,
+                            guest_hours: int | None = None) -> dict[str, Any]:
+        body: dict[str, Any] = {"role": role}
+        if profile:
+            body["profile"] = profile
+        if guest_hours:
+            body["guest_hours"] = guest_hours
+        return await self._post("/v1/telegram/pair", body, timeout=20)
+
+    async def telegram_notify(self, text: str, buttons: list[dict[str, str]] | None = None) -> int:
+        data = await self._post("/v1/telegram/notify", {"text": text, "buttons": buttons or []},
+                                timeout=30)
+        return int(data.get("sent", 0))
+
+    async def telegram_unlink_chat(self, chat_id: int) -> None:
+        await self._post("/v1/telegram/unlink_chat", {"chat_id": chat_id}, timeout=20)
 
     async def telegram_unpair(self) -> dict[str, Any]:
         return await self._post("/v1/telegram/unpair", {}, timeout=20)

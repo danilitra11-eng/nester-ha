@@ -34,7 +34,20 @@ const UI = {
     tg: "Telegram", tgHelp: "Talk to Nestor from anywhere, by text or voice message.",
     tgConnect: "Connect Telegram", tgDisconnect: "Disconnect", tgLinked: "Connected",
     tgSteps: ["Open Telegram on your phone.", "Search for {bot} and open it.", "Tap Start, then send this code:", "Wait for the message \"Connected\". The code works for 10 minutes."],
-    tgNotLinked: "Not connected" },
+    tgNotLinked: "Not connected",
+    home: "Home", month: "This month", requests: "requests", actionsDone: "things done for you", alertsN: "heads-ups", fixesN: "problems caught", autosN: "new automations", saved: "estimated savings",
+    recent: "Recent messages from Nestor", none: "Nothing yet.",
+    health: "Home check-up", check: "Check now", allGood: "✓ Everything looks fine.", unavailable: "Not responding", lowBattery: "Low battery", broken: "Not working", updates: "Updates available",
+    alerts: "Alerts", alertsHelp: "What Nestor tells you about without being asked.",
+    r: { safety: "🚨 Leaks, smoke, gas, CO (urgent, even in quiet hours)", left_open: "🚪 Garage/doors left open when away or at night", lights_left_on: "💡 Lights left on when everyone leaves", window_climate: "🪟 Window open while the AC runs", doctor: "🩺 Daily home check-up", suggestions: "💡 Weekly automation ideas", reports: "📊 Monthly report", doorbell: "🔔 Doorbell with camera description" },
+    phones: "Send to these phones (Home Assistant app)", noPhones: "No phones with the Home Assistant app found. Telegram and Home Assistant notifications are still used.", test: "Send a test",
+    vacation: "Vacation mode", vacationHelp: "Lights come and go in the evening so the house looks lived-in.", on: "On", offWord: "Off",
+    family: "Family & guests", familyHelp: "Limit what each person may control. Names must match their Home Assistant user name or Telegram name.",
+    person: "Name", blockedLbl: "Not allowed to control", addPerson: "Add person",
+    people: "Connected on Telegram", remove: "Remove", guestLbl: "guest until",
+    invite: "Invite a guest", inviteHelp: "A babysitter, dog sitter or neighbour gets temporary access on Telegram, with only the basics.", hours: "Hours of access", guestName: "Guest name", createCode: "Create guest code",
+    memory: "What Nestor remembers", memoryHelp: "Nestor learns preferences when you tell it things like \"I like the bedroom at 70\". Delete anything here.", forget: "Forget",
+    locked: "🔒 Available on {plan}", upgrade: "Upgrade"  },
   es: { chat: "Chat", settings: "Ajustes", help: "Ayuda", plan: "Plan", left: "restantes este mes",
     general: "General", name: "Nombre", personality: "Personalidad", language: "Idioma",
     pers: { butler: "Mayordomo", friendly: "Amigable", brief: "Breve" }, auto: "Automático",
@@ -53,7 +66,20 @@ const UI = {
     tg: "Telegram", tgHelp: "Habla con Nestor desde cualquier lugar, por texto o mensaje de voz.",
     tgConnect: "Conectar Telegram", tgDisconnect: "Desconectar", tgLinked: "Conectado",
     tgSteps: ["Abre Telegram en tu teléfono.", "Busca {bot} y ábrelo.", "Toca Iniciar y envía este código:", "Espera el mensaje \"Conectado\". El código dura 10 minutos."],
-    tgNotLinked: "No conectado" },
+    tgNotLinked: "No conectado",
+    home: "Casa", month: "Este mes", requests: "pedidos", actionsDone: "acciones por ti", alertsN: "avisos", fixesN: "problemas detectados", autosN: "automatizaciones nuevas", saved: "ahorro estimado",
+    recent: "Mensajes recientes de Nestor", none: "Nada todavía.",
+    health: "Revisión de la casa", check: "Revisar ahora", allGood: "✓ Todo se ve bien.", unavailable: "No responden", lowBattery: "Batería baja", broken: "Sin funcionar", updates: "Actualizaciones disponibles",
+    alerts: "Avisos", alertsHelp: "Lo que Nestor te cuenta sin que se lo pidas.",
+    r: { safety: "🚨 Fugas, humo, gas, CO (urgente, incluso en silencio)", left_open: "🚪 Garaje/puertas abiertas sin nadie o de noche", lights_left_on: "💡 Luces encendidas cuando todos salen", window_climate: "🪟 Ventana abierta con el clima encendido", doctor: "🩺 Revisión diaria", suggestions: "💡 Ideas de automatización semanales", reports: "📊 Informe mensual", doorbell: "🔔 Timbre con descripción de la cámara" },
+    phones: "Enviar a estos teléfonos (app de Home Assistant)", noPhones: "No se encontraron teléfonos con la app. Se usan Telegram y las notificaciones de Home Assistant.", test: "Enviar prueba",
+    vacation: "Modo vacaciones", vacationHelp: "Las luces se encienden y apagan por la tarde para que la casa parezca habitada.", on: "Activado", offWord: "Desactivado",
+    family: "Familia e invitados", familyHelp: "Limita lo que cada persona puede controlar. El nombre debe coincidir con su usuario de Home Assistant o de Telegram.",
+    person: "Nombre", blockedLbl: "No puede controlar", addPerson: "Agregar persona",
+    people: "Conectados en Telegram", remove: "Quitar", guestLbl: "invitado hasta",
+    invite: "Invitar a alguien", inviteHelp: "Una niñera, cuidador de perros o vecino recibe acceso temporal en Telegram, solo lo básico.", hours: "Horas de acceso", guestName: "Nombre", createCode: "Crear código",
+    memory: "Lo que Nestor recuerda", memoryHelp: "Nestor aprende preferencias cuando le dices cosas como \"me gusta el cuarto a 21\". Borra lo que quieras.", forget: "Olvidar",
+    locked: "🔒 Disponible en {plan}", upgrade: "Mejorar plan"  },
   he: { chat: "צ'אט", settings: "הגדרות", help: "עזרה", plan: "מסלול", left: "נותרו החודש",
     general: "כללי", name: "שם", personality: "אישיות", language: "שפה",
     pers: { butler: "משרת", friendly: "חברי", brief: "קצר" }, auto: "אוטומטי",
@@ -72,7 +98,20 @@ const UI = {
     tg: "טלגרם", tgHelp: "לדבר עם Nestor מכל מקום, בטקסט או בהודעה קולית.",
     tgConnect: "חבר טלגרם", tgDisconnect: "נתק", tgLinked: "מחובר",
     tgSteps: ["פתח את טלגרם בטלפון.", "חפש את {bot} ופתח אותו.", "לחץ Start ושלח את הקוד הזה:", "חכה להודעה \"מחובר\". הקוד תקף ל-10 דקות."],
-    tgNotLinked: "לא מחובר" },
+    tgNotLinked: "לא מחובר",
+    home: "בית", month: "החודש", requests: "בקשות", actionsDone: "פעולות שעשיתי בשבילך", alertsN: "התראות", fixesN: "תקלות שזוהו", autosN: "אוטומציות חדשות", saved: "חיסכון משוער",
+    recent: "הודעות אחרונות מ-Nestor", none: "עוד אין.",
+    health: "בדיקת בריאות לבית", check: "בדוק עכשיו", allGood: "✓ הכל נראה תקין.", unavailable: "לא מגיבים", lowBattery: "סוללה חלשה", broken: "לא עובדים", updates: "עדכונים זמינים",
+    alerts: "התראות", alertsHelp: "על מה Nestor מעדכן אותך בלי שתבקש.",
+    r: { safety: "🚨 נזילה, עשן, גז, פחמן חד-חמצני (דחוף, גם בשעות שקט)", left_open: "🚪 מוסך/דלתות פתוחים כשאין אף אחד או בלילה", lights_left_on: "💡 אורות דולקים כשכולם יוצאים", window_climate: "🪟 חלון פתוח כשהמזגן עובד", doctor: "🩺 בדיקת בריאות יומית", suggestions: "💡 רעיונות לאוטומציות כל שבוע", reports: "📊 דוח חודשי", doorbell: "🔔 פעמון עם תיאור מהמצלמה" },
+    phones: "לשלוח לטלפונים האלה (אפליקציית Home Assistant)", noPhones: "לא נמצאו טלפונים עם האפליקציה. עדיין נשלח לטלגרם ולהתראות של Home Assistant.", test: "שלח בדיקה",
+    vacation: "מצב חופשה", vacationHelp: "אורות נדלקים ונכבים בערב כדי שהבית ייראה מאוכלס.", on: "פועל", offWord: "כבוי",
+    family: "משפחה ואורחים", familyHelp: "הגבל מה כל אחד רשאי להפעיל. השם צריך להתאים לשם המשתמש שלו ב-Home Assistant או בטלגרם.",
+    person: "שם", blockedLbl: "אסור להפעיל", addPerson: "הוסף אדם",
+    people: "מחוברים בטלגרם", remove: "הסר", guestLbl: "אורח עד",
+    invite: "הזמן אורח", inviteHelp: "בייביסיטר, מטפל לכלב או שכן מקבלים גישה זמנית בטלגרם, רק לדברים הבסיסיים.", hours: "שעות גישה", guestName: "שם האורח", createCode: "צור קוד לאורח",
+    memory: "מה Nestor זוכר", memoryHelp: "Nestor לומד העדפות כשאתה אומר לו דברים כמו \"אני אוהב את חדר השינה על 22\". אפשר למחוק כל דבר כאן.", forget: "שכח",
+    locked: "🔒 זמין במסלול {plan}", upgrade: "שדרג"  },
 };
 
 const CSS = `
@@ -146,12 +185,13 @@ class NestorPanel extends HTMLElement {
     this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap" dir="${this.lang === "he" ? "rtl" : "ltr"}">
       <header><button class="menu" title="Menu">☰</button><div class="orb"></div>
         <div><h1></h1><div class="sub" id="status">…</div></div><div class="sp"></div>
-        <div class="tabs"><button data-tab="chat">${t.chat}</button> <button data-tab="settings">⚙︎ ${t.settings}</button>
+        <div class="tabs"><button data-tab="chat">${t.chat}</button> <button data-tab="home">🏠 ${t.home}</button> <button data-tab="settings">⚙︎ ${t.settings}</button>
         <button data-help="1">❓</button></div></header>
       <div id="chatv" style="display:flex;flex-direction:column;flex:1;min-height:0">
         <div id="log"></div>
         <form><button type="button" class="btn mic">🎤</button><input type="text" autocomplete="off" placeholder="${c.ph}">
           <button type="button" class="btn newc">${c.newc}</button><button class="primary">${c.send}</button></form></div>
+      <div id="homev" class="settings" style="display:none"></div>
       <div id="setv" class="settings" style="display:none"></div></div>`;
     const r = this.shadowRoot;
     r.querySelector("h1").textContent = this._settings.options.assistant_name;
@@ -171,7 +211,9 @@ class NestorPanel extends HTMLElement {
     r.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
     r.querySelector("#chatv").style.display = tab === "chat" ? "flex" : "none";
     r.querySelector("#setv").style.display = tab === "settings" ? "flex" : "none";
+    r.querySelector("#homev").style.display = tab === "home" ? "flex" : "none";
     if (tab === "settings") this._renderSettings();
+    if (tab === "home") this._renderHome();
   }
 
   _hello() { this._add(this.c.hello.replace("{name}", this._settings.options.assistant_name), "bot"); }
@@ -251,7 +293,9 @@ class NestorPanel extends HTMLElement {
         <div class="perm" id="perm"></div><p class="warn" id="secw" style="display:none">⚠️ ${t.secWarn}</p>
         <div class="row"><label><input type="checkbox" id="va" ${o.make_voice_assistant ? "checked" : ""} ${admin ? "" : "disabled"}> ${t.va}</label></div>
         ${admin ? `<button class="primary" id="saveP">${t.save}</button>` : ""}</div>
-      <div class="card"><h2>${t.tg}</h2><p class="help">${t.tgHelp}</p><div id="tg"></div></div>`;
+      <div class="card"><h2>${t.tg}</h2><p class="help">${t.tgHelp}</p><div id="tg"></div></div>
+      <div class="card"><h2>${t.family}</h2><div id="family"></div></div>
+      <div class="card"><h2>${t.memory}</h2><div id="memory"></div></div>`;
     box.querySelector("#name").value = o.assistant_name;
     box.querySelector("#saveGen").onclick = (e) => this._save({ assistant_name: box.querySelector("#name").value, personality: box.querySelector("#pers").value,
       language: box.querySelector("#lang").value, speak_replies: box.querySelector("#speak").checked }, e.target);
@@ -272,6 +316,146 @@ class NestorPanel extends HTMLElement {
 
     this._renderVoices();
     this._renderTelegram();
+    this._renderFamily();
+    this._renderMemory();
+  }
+
+  has(feature) { return (this._settings.features || []).includes(feature); }
+  lockedHtml(plan) { return `<p class="warn">${this.t.locked.replace("{plan}", plan)}</p>`; }
+
+  async _renderHome() {
+    const t = this.t, admin = this._settings.is_admin, o = this._settings.options;
+    const box = this.shadowRoot.querySelector("#homev");
+    box.innerHTML = `
+      <div class="card"><h2>📊 ${t.month}</h2><div id="report">…</div></div>
+      <div class="card"><h2>🩺 ${t.health}</h2><div id="health"></div></div>
+      <div class="card"><h2>🔔 ${t.alerts}</h2><p class="help">${t.alertsHelp}</p><div id="alerts"></div></div>
+      <div class="card"><h2>🧳 ${t.vacation}</h2><p class="help">${t.vacationHelp}</p><div id="vac"></div></div>`;
+    // report
+    const rep = await this.ws({ type: "nestor/report" });
+    const m = rep.month, cur = { USD: "$", EUR: "€", GBP: "£", ILS: "₪" }[rep.currency] || "";
+    box.querySelector("#report").innerHTML = `<div class="row" style="gap:18px">
+      <span><b>${m.commands}</b> ${t.requests}</span><span><b>${m.actions}</b> ${t.actionsDone}</span>
+      <span><b>${m.alerts}</b> ${t.alertsN}</span><span><b>${m.fixes}</b> ${t.fixesN}</span>
+      <span><b>${m.automations}</b> ${t.autosN}</span><span><b>${m.kwh_saved} kWh ≈ ${cur}${m.money_saved}</b> ${t.saved}</span></div>
+      <p class="help" style="margin-top:12px">${t.recent}</p><div id="recent"></div>`;
+    const recent = box.querySelector("#recent");
+    if (!rep.recent_notifications.length) recent.textContent = t.none;
+    rep.recent_notifications.slice().reverse().forEach(n => { const d = document.createElement("div"); d.className = "help"; d.textContent = `${new Date(n.at * 1000).toLocaleString()} — ${n.text}`; recent.appendChild(d); });
+    // health
+    const hb = box.querySelector("#health");
+    if (!this.has("doctor")) hb.innerHTML = this.lockedHtml("Family");
+    else {
+      hb.innerHTML = `<button class="btn" id="chk">${t.check}</button><div id="hres" style="margin-top:10px"></div>`;
+      const run = async () => {
+        const h = await this.ws({ type: "nestor/health" }); const res = hb.querySelector("#hres"); res.innerHTML = "";
+        const rows = [[t.unavailable, h.unavailable.map(x => x.name)], [t.lowBattery, h.low_battery.map(x => `${x.name} (${x.level}%)`)],
+                      [t.broken, h.broken_integrations.map(x => x.title)], [t.updates, h.updates_available ? [String(h.updates_available)] : []]];
+        const issues = rows.filter(r => r[1].length);
+        if (!issues.length) { res.innerHTML = `<p class="ok">${t.allGood}</p>`; return; }
+        issues.forEach(([label, items]) => { const p = document.createElement("p"); p.textContent = `• ${label}: ${items.slice(0, 8).join(", ")}${items.length > 8 ? "…" : ""}`; res.appendChild(p); });
+      };
+      hb.querySelector("#chk").onclick = run; run();
+    }
+    // alerts
+    const ab = box.querySelector("#alerts");
+    const rules = this._settings.alert_rules;
+    rules.forEach(rule => {
+      const l = document.createElement("label"); l.style.display = "flex"; l.style.gap = "8px"; l.style.padding = "4px 0";
+      l.innerHTML = `<input type="checkbox" value="${rule}" ${o.alerts.includes(rule) ? "checked" : ""} ${admin ? "" : "disabled"}><span></span>`;
+      l.querySelector("span").textContent = t.r[rule] || rule; ab.appendChild(l);
+    });
+    const phones = await this.ws({ type: "nestor/notify_targets" });
+    const ph = document.createElement("div");
+    ph.innerHTML = `<p class="help" style="margin-top:12px">${t.phones}</p>` + (phones.available.length ? "" : `<p class="help">${t.noPhones}</p>`);
+    phones.available.forEach(svc => { const l = document.createElement("label"); l.style.display = "flex"; l.style.gap = "8px";
+      l.innerHTML = `<input type="checkbox" class="phone" value="${svc}" ${phones.selected.includes(svc) ? "checked" : ""} ${admin ? "" : "disabled"}><span></span>`;
+      l.querySelector("span").textContent = svc.replace("mobile_app_", ""); ph.appendChild(l); });
+    ab.appendChild(ph);
+    if (admin) {
+      const row = document.createElement("div"); row.className = "row";
+      row.innerHTML = `<button class="primary" id="saveA">${t.save}</button><button class="btn" id="testN">${t.test}</button>`;
+      ab.appendChild(row);
+      row.querySelector("#saveA").onclick = (e) => this._save({ alerts: [...ab.querySelectorAll("input:not(.phone):checked")].map(i => i.value),
+        notify_targets: phones.available.length ? [...ab.querySelectorAll("input.phone:checked")].map(i => i.value) : null }, e.target);
+      row.querySelector("#testN").onclick = () => this.ws({ type: "nestor/notify/test" });
+    }
+    // vacation
+    const vb = box.querySelector("#vac");
+    if (!this.has("vacation")) vb.innerHTML = this.lockedHtml("Pro");
+    else {
+      vb.innerHTML = `<label class="row"><input type="checkbox" id="vacOn" ${this._settings.options.vacation_mode ? "checked" : ""}> <b>${t.vacation}</b></label>`;
+      vb.querySelector("#vacOn").onchange = (e) => this._save({ vacation_mode: e.target.checked });
+    }
+  }
+
+  _renderFamily() {
+    const t = this.t, admin = this._settings.is_admin, o = this._settings.options;
+    const box = this.shadowRoot.querySelector("#family");
+    if (!this.has("profiles")) { box.innerHTML = this.lockedHtml("Family"); return; }
+    const groups = this._settings.device_groups;
+    const profiles = JSON.parse(JSON.stringify(o.profiles || {}));
+    box.innerHTML = `<p class="help">${t.familyHelp}</p><div id="plist"></div>
+      ${admin ? `<div class="row"><input type="text" id="pname" placeholder="${t.person}"><button class="btn" id="padd">${t.addPerson}</button><button class="primary" id="psave">${t.save}</button></div>` : ""}
+      <p class="help" style="margin-top:14px"><b>${t.people}</b></p><div id="tgpeople"></div>
+      <p class="help" style="margin-top:14px"><b>${t.invite}</b> — ${t.inviteHelp}</p><div id="guest"></div>`;
+    const list = box.querySelector("#plist");
+    const paint = () => {
+      list.innerHTML = "";
+      Object.entries(profiles).forEach(([name, p]) => {
+        const d = document.createElement("div"); d.className = "voice"; d.style.flexWrap = "wrap";
+        d.innerHTML = `<b style="min-width:110px"></b><span class="help">${t.blockedLbl}:</span>`;
+        d.querySelector("b").textContent = name;
+        groups.forEach(g => { const l = document.createElement("label"); l.style.fontSize = "13px";
+          l.innerHTML = `<input type="checkbox" ${p.blocked?.includes(g) ? "checked" : ""} ${admin ? "" : "disabled"}> ${t.p[g] || g}`;
+          l.querySelector("input").onchange = (e) => { p.blocked = p.blocked || []; if (e.target.checked) p.blocked.push(g); else p.blocked = p.blocked.filter(x => x !== g); };
+          d.appendChild(l); });
+        if (admin) { const rm = document.createElement("button"); rm.className = "btn"; rm.textContent = t.remove; rm.onclick = () => { delete profiles[name]; paint(); }; d.appendChild(rm); }
+        list.appendChild(d);
+      });
+    };
+    paint();
+    if (admin) {
+      box.querySelector("#padd").onclick = () => { const n = box.querySelector("#pname").value.trim(); if (n && !profiles[n]) { profiles[n] = { blocked: [] }; box.querySelector("#pname").value = ""; paint(); } };
+      box.querySelector("#psave").onclick = (e) => this._save({ profiles }, e.target);
+    }
+    // people on Telegram
+    const tp = box.querySelector("#tgpeople");
+    const people = this._status?.telegram?.people || [];
+    if (!people.length) tp.textContent = t.none;
+    people.forEach(pp => { const d = document.createElement("div"); d.className = "row";
+      const until = pp.access_until ? ` (${t.guestLbl} ${new Date(pp.access_until * 1000).toLocaleString()})` : "";
+      d.innerHTML = `<span></span>${admin ? `<button class="btn">${t.remove}</button>` : ""}`;
+      d.querySelector("span").textContent = (pp.profile || pp.name || pp.chat_id) + until;
+      if (admin) d.querySelector("button").onclick = async () => { await this.ws({ type: "nestor/telegram/unlink_chat", chat_id: pp.chat_id }); await this._refreshStatus(); this._renderFamily(); };
+      tp.appendChild(d); });
+    // guests
+    const g = box.querySelector("#guest");
+    if (!this.has("guests")) { g.innerHTML = this.lockedHtml("Pro"); return; }
+    if (!admin) { g.innerHTML = `<p class="help">${t.adminOnly}</p>`; return; }
+    g.innerHTML = `<div class="row"><input type="text" id="gname" placeholder="${t.guestName}"><label>${t.hours} <input type="text" id="ghours" value="48" style="width:70px"></label>
+      <button class="primary" id="gcode">${t.createCode}</button></div><div id="gout"></div>`;
+    g.querySelector("#gcode").onclick = async () => {
+      try {
+        const r = await this.ws({ type: "nestor/telegram/pair", role: "guest", profile: g.querySelector("#gname").value.trim() || "Guest", guest_hours: parseInt(g.querySelector("#ghours").value, 10) || 48 });
+        const s2 = t.tgSteps; const bot = r.bot_username ? "@" + r.bot_username : "the Nestor bot";
+        g.querySelector("#gout").innerHTML = `<ol><li>${s2[0]}</li><li>${s2[1].replace("{bot}", `<b>${bot}</b>`)}</li><li>${s2[2]}<div class="code">${r.code}</div></li></ol>`;
+      } catch (e) { g.querySelector("#gout").innerHTML = `<p class="warn">${e.message || e}</p>`; }
+    };
+  }
+
+  async _renderMemory() {
+    const t = this.t;
+    const box = this.shadowRoot.querySelector("#memory");
+    if (!this.has("memory")) { box.innerHTML = this.lockedHtml("Family"); return; }
+    const { facts } = await this.ws({ type: "nestor/memory" });
+    box.innerHTML = `<p class="help">${t.memoryHelp}</p>`;
+    if (!facts.length) box.insertAdjacentHTML("beforeend", `<p>${t.none}</p>`);
+    facts.slice().reverse().forEach(f => { const d = document.createElement("div"); d.className = "voice";
+      d.innerHTML = `<span></span><button class="btn">${t.forget}</button>`;
+      d.querySelector("span").textContent = f.text + (f.person ? ` — ${f.person}` : "");
+      d.querySelector("button").onclick = async () => { await this.ws({ type: "nestor/memory/forget", id: f.id }); this._renderMemory(); };
+      box.appendChild(d); });
   }
 
   async _renderVoices() {

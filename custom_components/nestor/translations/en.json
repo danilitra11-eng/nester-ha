@@ -123,7 +123,9 @@
         "scenes": "✨ Scenes and scripts",
         "security": "🔒 Locks and alarm (see warning above)",
         "structure": "🏠 Edit home structure: rooms, floors, names",
-        "design": "🎨 Create and edit dashboards and themes"
+        "design": "🎨 Create and edit dashboards and themes",
+        "automations": "⚙️ Create automations",
+        "cameras": "📷 Look through cameras (Pro)"
       }
     }
   }

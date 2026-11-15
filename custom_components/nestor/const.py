@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 DOMAIN = "nestor"
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 
 DEFAULT_CLOUD_URL = "https://api.your-domain.com"
 HELP_URL = "https://github.com/danilitra11-eng/nester-ha/tree/main/docs/guides"
@@ -24,6 +24,11 @@ OPT_TTS_VOICE = "tts_voice"
 OPT_SPEAK = "speak_replies"
 OPT_QUIET = "quiet_hours"
 OPT_VOICE_ASSISTANT = "make_voice_assistant"
+OPT_NOTIFY_TARGETS = "notify_targets"   # None = every phone with the HA app
+OPT_ALERTS = "alerts"                   # enabled proactive rules
+OPT_PROFILES = "profiles"               # {name: {"blocked": [permission groups]}}
+OPT_VACATION = "vacation_mode"
+OPT_ENERGY_PRICE = "energy_price"       # per kWh, for the savings estimate
 
 PERSONALITIES = ["butler", "friendly", "brief"]
 LANGUAGES = ["auto", "en", "es", "fr", "de", "it", "pt", "ru", "he", "zh", "ja"]
@@ -42,7 +47,10 @@ PERMISSION_GROUPS: dict[str, list[str]] = {
 # Special permissions that unlock tool families rather than device domains.
 PERMISSION_STRUCTURE = "structure"
 PERMISSION_DESIGN = "design"
-ALL_PERMISSIONS = [*PERMISSION_GROUPS, PERMISSION_STRUCTURE, PERMISSION_DESIGN]
+PERMISSION_AUTOMATIONS = "automations"
+PERMISSION_CAMERAS = "cameras"
+ALL_PERMISSIONS = [*PERMISSION_GROUPS, PERMISSION_STRUCTURE, PERMISSION_DESIGN,
+                   PERMISSION_AUTOMATIONS, PERMISSION_CAMERAS]
 DEFAULT_PERMISSIONS = ["lights", "switches", "climate", "covers", "media", "vacuum", "scenes"]
 
 # Domains that can never be called from chat, whatever the permissions.
@@ -62,7 +70,16 @@ DEFAULT_OPTIONS = {
     OPT_SPEAK: False,
     OPT_QUIET: None,
     OPT_VOICE_ASSISTANT: True,
+    OPT_NOTIFY_TARGETS: None,
+    OPT_ALERTS: ["safety", "left_open", "lights_left_on", "window_climate", "doctor",
+                 "suggestions", "reports", "doorbell"],
+    OPT_PROFILES: {},
+    OPT_VACATION: False,
+    OPT_ENERGY_PRICE: 0.17,
 }
+
+ALERT_RULES = ["safety", "left_open", "lights_left_on", "window_climate", "doctor",
+               "suggestions", "reports", "doorbell"]
 
 PANEL_URL = "nestor"
 STATIC_URL = "/nestor_static"

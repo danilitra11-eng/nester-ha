@@ -90,7 +90,8 @@ async def test_assist_controls_lights_and_respects_permissions(hass, cloud, setu
     assert results[0]["is_error"] is False
     assert results[1]["is_error"] is True and "not allowed" in results[1]["content"]
     # structure/design tools are not offered without permission
-    assert cloud.requests[0]["capabilities"] == []
+    assert "structure" not in cloud.requests[0]["capabilities"]
+    assert "design" not in cloud.requests[0]["capabilities"]
 
 
 async def test_structure_editing_and_confirmed_delete(hass, cloud, setup_nestor) -> None:
@@ -109,7 +110,8 @@ async def test_structure_editing_and_confirmed_delete(hass, cloud, setup_nestor)
     area = ar.async_get(hass).async_get_area_by_name("Office")
     assert area and area.floor_id == fr.async_get(hass).async_get_floor_by_name("Upstairs").floor_id
     assert er.async_get(hass).async_get(ent.entity_id).area_id == area.id
-    assert cloud.requests[0]["capabilities"] == ["structure"]
+    assert "structure" in cloud.requests[0]["capabilities"]
+    assert "design" not in cloud.requests[0]["capabilities"]
 
     # delete needs confirmation, and the token can't be used in the same turn
     def grab_token(messages):

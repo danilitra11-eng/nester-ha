@@ -11,6 +11,16 @@ from typing import Any
 SUPPORTED = ("en", "es", "fr", "de", "it", "pt", "ru", "he", "zh", "ja")
 
 MESSAGES: dict[str, dict[str, str]] = {
+    "telegram_unavailable": {
+        "en": "Telegram isn't set up on the Nestor service yet.",
+        "es": "Telegram aún no está configurado en el servicio de Nestor.",
+        "he": "טלגרם עוד לא מוגדר בשירות של Nestor.",
+    },
+    "plan_feature": {
+        "en": "That's part of a bigger plan. You can upgrade here: {renew_url}",
+        "es": "Eso es parte de un plan superior. Puedes mejorar aquí: {renew_url}",
+        "he": "זה חלק ממסלול גבוה יותר. אפשר לשדרג כאן: {renew_url}",
+    },
     "invalid_key": {
         "en": "Your license key isn't valid. Please check it and try again.",
         "es": "Tu clave de licencia no es válida. Revísala e inténtalo de nuevo.",

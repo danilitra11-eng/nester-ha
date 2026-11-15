@@ -1,42 +1,60 @@
 """The conversation loop: cloud step -> run tools locally -> cloud step ... -> reply.
 
-Tools run here, inside Home Assistant, under the owner's permissions. The cloud
-only decides what to do. Risky actions (deleting rooms, overwriting a dashboard
-Nestor didn't create) need the user's confirmation in a *later* message: the
-tool returns a token that only becomes valid after the user speaks again.
+Tools run here, inside Home Assistant, under the owner's permissions, the plan's
+features and the speaker's profile (family members can be restricted; guests only
+get the basics). Risky actions need the user's confirmation in a *later* message:
+the tool returns a token that only becomes valid after the user speaks again.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import re
 import secrets
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, time as dtime
-from typing import Any, Awaitable, Callable
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context
 from homeassistant.util import dt as dt_util
 
-from .cloud import CloudClient, CloudError
+from .cloud import CloudError
 from .const import (CHAT_EDITABLE, LANGUAGES, OPT_LANGUAGE, OPT_NAME, OPT_PERMISSIONS,
-                    OPT_PERSONALITY, OPT_QUIET, OPT_SPEAK, PERMISSION_DESIGN,
-                    PERMISSION_STRUCTURE, PERSONALITIES)
+                    OPT_PERSONALITY, OPT_PROFILES, OPT_QUIET, OPT_SPEAK, OPT_VACATION,
+                    PERMISSION_GROUPS, PERSONALITIES)
 from .i18n import localize, pick_language
-from .tools_design import DesignTools
-from .tools_home import HomeTools, ToolError
+from .tools_home import ToolError, allowed_domains
 
-MAX_STEPS = 10
+if TYPE_CHECKING:
+    from . import NestorRuntime
+
+MAX_STEPS = 12
 MAX_HISTORY = 40
 IDLE_RESET_SECONDS = 600
 CONFIRM_TTL = 600
+GUEST_DEFAULT_GROUPS = ["lights", "climate", "media", "covers"]
+
+# capability -> (permission needed or None, plan feature needed)
+CAPABILITIES = {
+    "structure": ("structure", "structure"),
+    "design": ("design", "design"),
+    "automations": ("automations", "automations"),
+    "vision": ("cameras", "vision"),
+    "memory": (None, "memory"),
+    "vacation": (None, "vacation"),
+    "doctor": (None, "doctor"),
+}
+READ_ONLY_TOOLS = {"find_entities", "get_state", "list_structure", "list_dashboards",
+                   "get_dashboard", "list_themes", "list_memories", "list_automations",
+                   "list_cameras", "home_health", "activity_summary", "look_at_camera"}
 
 
 @dataclass
 class Conversation:
     messages: list[dict[str, Any]] = field(default_factory=list)
-    last_used: float = field(default_factory=time.monotonic)
+    last_used: float = field(default_factory=lambda: time.monotonic())
     turn: int = 0
 
 
@@ -47,7 +65,13 @@ class Pending:
     summary: str
     conversation_id: str
     issued_turn: int
-    issued_at: float = field(default_factory=time.monotonic)
+    issued_at: float = field(default_factory=lambda: time.monotonic())
+
+
+@dataclass
+class Speaker:
+    name: str | None = None
+    guest: bool = False
 
 
 def in_quiet_hours(quiet: dict[str, str] | None, now: dtime) -> bool:
@@ -60,7 +84,6 @@ def in_quiet_hours(quiet: dict[str, str] | None, now: dtime) -> bool:
 
 
 def validate_setting(key: str, value: Any) -> Any:
-    import re
     if key == OPT_NAME:
         name = " ".join(str(value).split())[:40]
         if not name:
@@ -83,23 +106,16 @@ def validate_setting(key: str, value: Any) -> Any:
 
 
 class Agent:
-    def __init__(self, hass: HomeAssistant, cloud: CloudClient,
-                 get_options: Callable[[], dict[str, Any]],
-                 update_options: Callable[[dict[str, Any]], Awaitable[None]],
-                 home: HomeTools, design: DesignTools) -> None:
-        self.hass = hass
-        self.cloud = cloud
-        self._get_options = get_options
-        self._update_options = update_options
-        self.home = home
-        self.design = design
+    def __init__(self, runtime: "NestorRuntime") -> None:
+        self.rt = runtime
+        self.hass = runtime.hass
         self._convs: dict[str, Conversation] = {}
         self._locks: dict[str, asyncio.Lock] = {}
         self._pending: dict[str, Pending] = {}
 
     @property
     def options(self) -> dict[str, Any]:
-        return self._get_options()
+        return self.rt.options
 
     def reset(self, conversation_id: str) -> None:
         self._convs.pop(conversation_id, None)
@@ -112,9 +128,32 @@ class Agent:
         """For replies to voice messages: speak unless it's quiet hours."""
         return not in_quiet_hours(self.options.get(OPT_QUIET), dt_util.now().time())
 
-    def capabilities(self) -> list[str]:
+    # ---- who may do what -------------------------------------------------
+
+    def capabilities(self, speaker: Speaker | None = None) -> list[str]:
+        if speaker and speaker.guest:
+            return []
         perms = self.options.get(OPT_PERMISSIONS, [])
-        return [p for p in (PERMISSION_STRUCTURE, PERMISSION_DESIGN) if p in perms]
+        feats = self.rt.features
+        return [cap for cap, (perm, feat) in CAPABILITIES.items()
+                if feat in feats and (perm is None or perm in perms)]
+
+    def allowed_for(self, speaker: Speaker) -> set[str]:
+        base = set(self.rt.home.allowed)
+        profiles = self.options.get(OPT_PROFILES) or {}
+        profile = profiles.get(speaker.name or "", {}) if speaker.name else {}
+        if speaker.guest:
+            return base & allowed_domains(profile.get("allowed", GUEST_DEFAULT_GROUPS))
+        blocked = profile.get("blocked", [])
+        return base - allowed_domains(blocked) if blocked else base
+
+    async def _speaker_from_context(self, context: Context) -> str | None:
+        if context.user_id:
+            user = await self.hass.auth.async_get_user(context.user_id)
+            return user.name if user else None
+        return None
+
+    # ---- context --------------------------------------------------------
 
     def _conversation(self, cid: str) -> Conversation:
         conv = self._convs.get(cid)
@@ -125,20 +164,30 @@ class Agent:
         conv.last_used = time.monotonic()
         return conv
 
-    def _context_line(self) -> str:
+    def _context_line(self, speaker: Speaker, caps: list[str]) -> str:
         opts = self.options
         now: datetime = dt_util.now()
         unit = self.hass.config.units.temperature_unit
         quiet = opts.get(OPT_QUIET)
         quiet_txt = f"{quiet['start']}-{quiet['end']}" if quiet else "none"
-        caps = ", ".join(self.capabilities()) or "device control only"
-        return (f"[Home local time: {now:%A %Y-%m-%d %H:%M}; temperatures in {unit}]\n"
-                f"[Your settings: personality {opts.get(OPT_PERSONALITY)}; language "
-                f"{opts.get(OPT_LANGUAGE)}; read replies aloud "
-                f"{'on' if opts.get(OPT_SPEAK) else 'off'}; quiet hours {quiet_txt}; "
-                f"permissions: {caps}]")
+        groups = [g for g in PERMISSION_GROUPS
+                  if set(PERMISSION_GROUPS[g]) & self.allowed_for(speaker)]
+        lines = [f"[Home local time: {now:%A %Y-%m-%d %H:%M}; temperatures in {unit}]",
+                 f"[Your settings: personality {opts.get(OPT_PERSONALITY)}; language "
+                 f"{opts.get(OPT_LANGUAGE)}; read replies aloud "
+                 f"{'on' if opts.get(OPT_SPEAK) else 'off'}; quiet hours {quiet_txt}; "
+                 f"vacation mode {'on' if opts.get(OPT_VACATION) else 'off'}]",
+                 f"[Speaking: {speaker.name or 'unknown household member'}"
+                 f"{' (GUEST: only basic device control, no settings or changes to the home)' if speaker.guest else ''}; "
+                 f"may control: {', '.join(groups) or 'nothing'}; extra abilities: "
+                 f"{', '.join(caps) or 'none'}]"]
+        if "memory" in caps:
+            mem = self.rt.memory.context_text(speaker.name)
+            if mem:
+                lines.append(mem)
+        return "\n".join(lines)
 
-    # ---- tools ----------------------------------------------------------
+    # ---- confirmations --------------------------------------------------
 
     def _need_confirmation(self, action: str, args: dict[str, Any], summary: str,
                            cid: str, turn: int) -> str:
@@ -164,12 +213,15 @@ class Agent:
         return await self._execute(pending.action, pending.args)
 
     async def _execute(self, action: str, args: dict[str, Any]) -> str:
+        rt = self.rt
         if action == "delete_structure":
-            return await self.home.delete_structure(**args)
+            return await rt.home.delete_structure(**args)
         if action == "delete_dashboard":
-            return await self.design.delete_dashboard(**args)
+            return await rt.design.delete_dashboard(**args)
         if action == "save_dashboard":
-            return await self.design.save_dashboard(**args)
+            return await rt.design.save_dashboard(**args)
+        if action == "delete_automation":
+            return await rt.automations.delete(**args)
         raise ToolError(f"Unknown action {action}")
 
     async def _update_settings(self, changes: dict[str, Any]) -> str:
@@ -180,37 +232,63 @@ class Agent:
             if value is None and key != OPT_QUIET:
                 continue
             cleaned[key] = validate_setting(key, value)
-        await self._update_options(cleaned)
+        await self.rt.async_update_options(cleaned)
         return json.dumps({"ok": True, "updated": cleaned}, ensure_ascii=False)
 
+    # ---- tools ----------------------------------------------------------
+
     async def run_tool(self, name: str, args: dict[str, Any], *, cid: str, turn: int,
-                       context: Context) -> tuple[str, bool]:
-        caps = self.capabilities()
+                       context: Context, speaker: Speaker) -> tuple[Any, bool]:
+        rt = self.rt
+        caps = self.capabilities(speaker)
+
+        def need(cap: str, what: str) -> None:
+            if cap not in caps:
+                raise ToolError(f"{what} isn't available"
+                                + (" for guests." if speaker.guest else
+                                   ": the owner hasn't allowed it, or the plan doesn't include it."))
         try:
             if name == "find_entities":
-                return await self.home.find_entities(**args), False
+                return await rt.home.find_entities(**args), False
             if name == "get_state":
-                return await self.home.get_state(**args), False
+                return await rt.home.get_state(**args), False
             if name == "call_service":
-                return await self.home.call_service(**args, context=context), False
+                out = await rt.home.call_service(**args, context=context,
+                                                 allowed=self.allowed_for(speaker))
+                rt.stats.inc("actions")
+                return out, False
             if name == "update_settings":
+                if speaker.guest:
+                    raise ToolError("Guests can't change settings.")
                 return await self._update_settings(args), False
             if name == "confirm_action":
                 return await self._confirm(args.get("token", ""), cid, turn), False
+            if name == "activity_summary":
+                return json.dumps(rt.stats.summary(price=float(self.options.get(
+                    "energy_price", 0.17)))), False
+
+            if name in ("remember", "forget", "list_memories"):
+                need("memory", "Memory")
+                if name == "remember":
+                    return await rt.memory.remember(args.get("fact", ""),
+                                                    args.get("person") or None), False
+                if name == "forget":
+                    return await rt.memory.forget(args.get("id", "")), False
+                return await rt.memory.list_memories(), False
 
             if name in STRUCTURE_TOOLS:
-                if PERMISSION_STRUCTURE not in caps:
-                    raise ToolError("The owner hasn't allowed editing the home's structure.")
+                need("structure", "Editing the home's structure")
                 if name == "delete_area_or_floor":
-                    summary = self.home.describe_delete(args["kind"], args["name"])
+                    summary = rt.home.describe_delete(args["kind"], args["name"])
                     return self._need_confirmation("delete_structure", args, summary,
                                                    cid, turn), False
-                return await getattr(self.home, name)(**args), False
+                return await getattr(rt.home, name)(**args), False
 
             if name in DESIGN_TOOLS:
-                if PERMISSION_DESIGN not in caps:
-                    raise ToolError("The owner hasn't allowed editing dashboards and design.")
-                if name == "save_dashboard" and not self.design.is_nestor_dashboard(
+                need("design", "Editing dashboards and design")
+                if name in ("create_dashboard", "save_dashboard"):
+                    rt.stats.inc("actions")
+                if name == "save_dashboard" and not rt.design.is_nestor_dashboard(
                         args.get("url_path")):
                     return self._need_confirmation(
                         "save_dashboard", args,
@@ -220,37 +298,70 @@ class Agent:
                     return self._need_confirmation(
                         "delete_dashboard", args,
                         f"delete the dashboard '{args.get('url_path')}'", cid, turn), False
-                return await getattr(self.design, name)(**args), False
+                return await getattr(rt.design, name)(**args), False
+
+            if name in AUTOMATION_TOOLS:
+                need("automations", "Creating automations")
+                if name == "create_automation":
+                    out = await rt.automations.create(**args)
+                    rt.stats.inc("automations")
+                    return out, False
+                if name == "list_automations":
+                    return await rt.automations.list_automations(), False
+                if name == "set_automation_enabled":
+                    return await rt.automations.set_enabled(**args), False
+                if name == "delete_automation":
+                    return self._need_confirmation(
+                        "delete_automation", args,
+                        f"delete the automation {args.get('automation_id')}", cid, turn), False
+
+            if name in ("look_at_camera", "list_cameras"):
+                need("vision", "Looking through cameras")
+                if name == "list_cameras":
+                    return await rt.cameras.list_cameras(), False
+                return await rt.cameras.look(args["entity_id"], args.get("question")), False
+
+            if name == "set_vacation_mode":
+                need("vacation", "Vacation mode")
+                await rt.async_update_options({OPT_VACATION: bool(args.get("enabled"))})
+                return json.dumps({"ok": True, "vacation_mode": bool(args.get("enabled"))}), False
+
+            if name == "home_health":
+                need("doctor", "The home check-up")
+                return json.dumps(await rt.watchers.health_check(), default=str), False
 
             raise ToolError(f"Unknown tool {name}.")
         except ToolError as err:
             return str(err), True
-        except TypeError as err:
+        except (TypeError, KeyError) as err:
             return f"Bad arguments for {name}: {err}", True
 
     # ---- main loop ---------------------------------------------------
 
     async def ask(self, conversation_id: str, text: str, *, ui_language: str | None = None,
-                  context: Context | None = None) -> dict[str, Any]:
+                  context: Context | None = None, speaker: str | None = None,
+                  guest: bool = False) -> dict[str, Any]:
         opts = self.options
         name, language, personality = (opts.get(OPT_NAME, "Nestor"), opts.get(OPT_LANGUAGE, "auto"),
                                        opts.get(OPT_PERSONALITY, "butler"))
         msg_lang = pick_language(language, ui_language)
         context = context or Context()
+        who = Speaker(speaker or await self._speaker_from_context(context), guest)
+        caps = self.capabilities(who)
         settings_changed = False
+        self.rt.stats.inc("commands")
         lock = self._locks.setdefault(conversation_id, asyncio.Lock())
         async with lock:
             conv = self._conversation(conversation_id)
             conv.turn += 1
             turn = conv.turn
             messages = list(conv.messages)
-            messages.append({"role": "user", "content": f"{self._context_line()}\n{text}"})
+            messages.append({"role": "user", "content": f"{self._context_line(who, caps)}\n{text}"})
             actions: list[dict[str, Any]] = []
             try:
                 for _ in range(MAX_STEPS):
-                    result = await self.cloud.step(messages, name=name, language=language,
-                                                   personality=personality,
-                                                   capabilities=self.capabilities())
+                    result = await self.rt.cloud.step(messages, name=name, language=language,
+                                                      personality=personality, capabilities=caps)
                     content = result.get("content", [])
                     messages.append({"role": "assistant", "content": content})
                     stop = result.get("stop_reason")
@@ -263,15 +374,15 @@ class Agent:
                     if stop == "tool_use" and tool_uses:
                         outputs = await asyncio.gather(*(
                             self.run_tool(b["name"], b.get("input") or {}, cid=conversation_id,
-                                          turn=turn, context=context) for b in tool_uses))
+                                          turn=turn, context=context, speaker=who)
+                            for b in tool_uses))
                         results = []
                         for block, (out, is_err) in zip(tool_uses, outputs):
-                            if block["name"] not in ("find_entities", "get_state",
-                                                     "list_structure", "list_dashboards",
-                                                     "get_dashboard", "list_themes"):
+                            if block["name"] not in READ_ONLY_TOOLS:
                                 actions.append({"tool": block["name"],
                                                 "input": block.get("input"), "ok": not is_err})
-                            if block["name"] == "update_settings" and not is_err:
+                            if block["name"] in ("update_settings", "set_vacation_mode") \
+                                    and not is_err:
                                 settings_changed = True
                             results.append({"type": "tool_result", "tool_use_id": block["id"],
                                             "content": out, "is_error": is_err})
@@ -280,7 +391,8 @@ class Agent:
 
                     reply = " ".join(b.get("text", "") for b in content
                                      if b.get("type") == "text").strip()
-                    conv.messages = [] if settings_changed else messages
+                    # drop pictures from the kept history: they're big and already described
+                    conv.messages = [] if settings_changed else _without_images(messages)
                     return {"reply": reply or "…", "actions": actions,
                             "quota_remaining": result.get("quota_remaining"),
                             "speak": self.should_speak(), "settings_changed": settings_changed}
@@ -288,11 +400,27 @@ class Agent:
                 return {"reply": localize("too_many_steps", msg_lang), "actions": actions,
                         "speak": False}
             except CloudError as err:
+                if err.code == "plan_feature":
+                    self.rt.schedule_feature_refresh()
                 return {"reply": localize(err.code, msg_lang, err.detail), "actions": actions,
                         "error": err.code, "speak": False}
+
+
+def _without_images(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Conversations with a camera picture start fresh next time instead of resending it."""
+    for m in messages:
+        content = m.get("content")
+        if isinstance(content, list):
+            for block in content:
+                inner = block.get("content") if isinstance(block, dict) else None
+                if isinstance(inner, list) and any(i.get("type") == "image" for i in inner):
+                    return []
+    return messages
 
 
 STRUCTURE_TOOLS = {"list_structure", "create_floor", "create_area", "update_area", "assign_area",
                    "rename_entity", "delete_area_or_floor"}
 DESIGN_TOOLS = {"list_dashboards", "get_dashboard", "create_dashboard", "save_dashboard",
                 "undo_dashboard", "delete_dashboard", "list_themes", "set_theme"}
+AUTOMATION_TOOLS = {"create_automation", "list_automations", "set_automation_enabled",
+                    "delete_automation"}

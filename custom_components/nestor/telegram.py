@@ -72,6 +72,10 @@ class TelegramRelay:
         opts = self.rt.options
         chat_id = msg["chat_id"]
         lang = pick_language(opts.get(OPT_LANGUAGE, "auto"), msg.get("language_code"))
+        if msg.get("callback"):
+            await self.rt.cloud.telegram_reply(chat_id,
+                                               await self.rt.notifier.handle_callback(msg["callback"]))
+            return
         text = msg.get("text")
         was_voice = bool(msg.get("voice"))
         if was_voice:
@@ -88,7 +92,9 @@ class TelegramRelay:
         if not text:
             return
         result = await self.rt.agent.ask(f"telegram-{chat_id}", text, ui_language=lang,
-                                         context=Context())
+                                         context=Context(),
+                                         speaker=msg.get("profile") or msg.get("name"),
+                                         guest=msg.get("role") == "guest")
         reply = result["reply"]
         voice = None
         # Voice notes get a spoken answer, unless it's quiet hours.

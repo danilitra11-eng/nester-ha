@@ -131,18 +131,20 @@ class HomeTools:
 
     async def call_service(self, domain: str, service: str, entity_ids: list[str],
                            data: dict[str, Any] | None = None,
-                           context: Context | None = None) -> str:
+                           context: Context | None = None,
+                           allowed: set[str] | None = None) -> str:
+        allowed = self.allowed if allowed is None else allowed
         domain, service = domain.lower(), service.lower()
         if not SERVICE_RE.match(domain) or not SERVICE_RE.match(service):
             raise ToolError("Invalid service name.")
-        if domain in FORBIDDEN_DOMAINS or domain not in self.allowed:
+        if domain in FORBIDDEN_DOMAINS or domain not in allowed:
             raise ToolError(f"The owner has not allowed controlling '{domain}' devices. They can "
                             "allow it in Nestor's settings (Settings > Devices & services > "
                             "Nestor > Configure).")
         if not entity_ids:
             raise ToolError("entity_ids must not be empty.")
         for eid in entity_ids:
-            if eid.split(".", 1)[0] not in self.allowed:
+            if eid.split(".", 1)[0] not in allowed:
                 raise ToolError(f"The owner has not allowed controlling {eid}.")
             if self.hass.states.get(eid) is None:
                 raise ToolError(f"No entity {eid}.")
