@@ -29,13 +29,13 @@ async def test_setup_wizard(hass: HomeAssistant, cloud) -> None:
         raise CloudError("invalid_key")
     with patch("custom_components.nestor.config_flow.CloudClient.verify", side_effect=bad_verify):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"license_key": "nope", "cloud_url": "http://cloud"})
+            result["flow_id"], {"license_key": "nope", "cloud_url": "https://cloud"})
     assert result["errors"] == {"base": "invalid_key"}
 
     with patch("custom_components.nestor.config_flow.CloudClient.verify",
                return_value={"valid": True}):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"license_key": " GOOD-KEY ", "cloud_url": "http://cloud"})
+            result["flow_id"], {"license_key": " GOOD-KEY ", "cloud_url": "https://cloud"})
     assert result["step_id"] == "name"
     result = await hass.config_entries.flow.async_configure(result["flow_id"],
                                                             {"assistant_name": "Jarvis"})

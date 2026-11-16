@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import ipaddress
 import uuid
 from typing import Any
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -55,6 +57,23 @@ def _select(options: list[str], key: str, multiple: bool = False,
                                                multiple=multiple, mode=mode))
 
 
+def url_is_safe(url: str) -> bool:
+    """HTTPS always; plain HTTP only to this home's own network (a test server)."""
+    parsed = urlparse(url)
+    if parsed.scheme == "https" and parsed.hostname:
+        return True
+    if parsed.scheme != "http" or not parsed.hostname:
+        return False
+    host = parsed.hostname
+    if host == "localhost" or host.endswith(".local"):
+        return True
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return ip.is_private or ip.is_loopback
+
+
 class NestorConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
@@ -77,11 +96,13 @@ class NestorConfigFlow(ConfigFlow, domain=DOMAIN):
             instance_id = uuid.uuid4().hex
             client = CloudClient(async_get_clientsession(self.hass), cloud_url, key, instance_id)
             try:
+                if not url_is_safe(cloud_url):
+                    raise CloudError("insecure_url")
                 await client.verify()
             except CloudError as err:
                 errors["base"] = err.code if err.code in (
                     "invalid_key", "subscription_inactive", "too_many_instances",
-                    "offline") else "generic"
+                    "offline", "insecure_url") else "generic"
             else:
                 self._data = {CONF_LICENSE_KEY: key, CONF_CLOUD_URL: cloud_url,
                               CONF_INSTANCE_ID: instance_id}

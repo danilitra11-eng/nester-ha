@@ -61,7 +61,8 @@
       "subscription_inactive": "המנוי לא פעיל. חדש אותו מהקישור במייל הקבלה ונסה שוב.",
       "too_many_instances": "המפתח כבר בשימוש במספר הבתים המרבי של המסלול. פנה לתמיכה.",
       "offline": "אין חיבור לשירות של Nestor. בדוק את החיבור לאינטרנט ונסה שוב.",
-      "generic": "משהו השתבש. נסה שוב בעוד דקה."
+      "generic": "משהו השתבש. נסה שוב בעוד דקה.",
+      "insecure_url": "כתובת השירות חייבת להתחיל ב-https://‏ (http://‏ רגיל עובד רק לשרת בדיקות ברשת הביתית)."
     },
     "abort": {
       "already_configured": "Nestor כבר מוגדר. לשינוי הגדרות: Settings → Devices & services → Nestor → Configure."

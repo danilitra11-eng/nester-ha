@@ -7,11 +7,11 @@
 - You're an administrator in Home Assistant.
 
 ## Steps
-1. Open **Nestor** in the sidebar → **⚙︎ Settings** → **Telegram** → **Connect Telegram**. A 6-digit code appears.
+1. Open **Nestor** in the sidebar → **⚙︎ Settings** → **Telegram** → **Connect Telegram**. An 8-digit code appears.
    > 📷 *Screenshot: code on screen*
 2. On your phone, open Telegram and search for **@NestorHomeBot** (the name is shown next to the code). Open it.
    > 📷 *Screenshot: bot in Telegram search*
-3. Tap **Start**, then send the 6-digit code.
+3. Tap **Start**, then send the 8-digit code.
    > 📷 *Screenshot: chat with the code*
 4. Wait for the reply **Connected ✓**.
 5. Each family member who wants to use it repeats steps 1–4 with a new code.

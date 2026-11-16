@@ -61,7 +61,8 @@
       "subscription_inactive": "This subscription isn't active. Renew it from the link in your receipt email, then try again.",
       "too_many_instances": "This key is already used on the maximum number of homes for its plan. Contact support to move it.",
       "offline": "Can't reach the Nestor service. Check this Home Assistant's internet connection and try again.",
-      "generic": "Something went wrong. Please try again in a minute."
+      "generic": "Something went wrong. Please try again in a minute.",
+      "insecure_url": "The service address must start with https:// (plain http:// only works for a test server on your home network)."
     },
     "abort": {
       "already_configured": "Nestor is already set up. To change settings, go to Settings → Devices & services → Nestor → Configure."

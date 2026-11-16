@@ -222,6 +222,12 @@ class Agent:
             return await rt.design.save_dashboard(**args)
         if action == "delete_automation":
             return await rt.automations.delete(**args)
+        if action == "call_service":
+            call = dict(args)
+            allowed, context = call.pop("_allowed"), call.pop("_context")
+            out = await rt.home.call_service(**call, context=context, allowed=allowed)
+            rt.stats.inc("actions")
+            return out
         raise ToolError(f"Unknown action {action}")
 
     async def _update_settings(self, changes: dict[str, Any]) -> str:
@@ -253,8 +259,18 @@ class Agent:
             if name == "get_state":
                 return await rt.home.get_state(**args), False
             if name == "call_service":
-                out = await rt.home.call_service(**args, context=context,
-                                                 allowed=self.allowed_for(speaker))
+                allowed = self.allowed_for(speaker)
+                risky = rt.home.risky_call(args.get("domain", ""), args.get("service", ""),
+                                           args.get("entity_ids") or [])
+                if risky:
+                    # Check the permissions now, so the user isn't asked about something
+                    # that would fail anyway; they are checked again when confirmed.
+                    rt.home.check_call(args.get("domain", ""), args.get("entity_ids") or [],
+                                       allowed)
+                    return self._need_confirmation(
+                        "call_service", {**args, "_allowed": allowed, "_context": context},
+                        risky, cid, turn), False
+                out = await rt.home.call_service(**args, context=context, allowed=allowed)
                 rt.stats.inc("actions")
                 return out, False
             if name == "update_settings":

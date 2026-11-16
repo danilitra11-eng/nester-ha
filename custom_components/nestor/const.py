@@ -57,6 +57,12 @@ DEFAULT_PERMISSIONS = ["lights", "switches", "climate", "covers", "media", "vacu
 FORBIDDEN_DOMAINS = {"homeassistant", "hassio", "shell_command", "python_script", "rest_command",
                      "recorder", "system_log", "logger", "backup", "pyscript", "update"}
 
+# Services that open the home up. The model can't run these on its own: they always need the
+# user's explicit confirmation in a later message, and automations can't schedule them.
+RISKY_SERVICES = {"lock.unlock", "lock.open", "alarm_control_panel.alarm_disarm"}
+# Opening these kinds of covers is risky too (garage, gate, front door).
+RISKY_COVER_CLASSES = {"garage", "gate", "door"}
+
 # What the assistant itself may change through chat.
 CHAT_EDITABLE = {OPT_NAME, OPT_LANGUAGE, OPT_PERSONALITY, OPT_SPEAK, OPT_QUIET}
 

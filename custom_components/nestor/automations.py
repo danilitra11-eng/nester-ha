@@ -6,6 +6,7 @@ is allowed to perform, so an automation can't sneak past the permissions."""
 from __future__ import annotations
 
 import json
+import re
 import os
 import secrets
 from typing import Any
@@ -14,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 
-from .const import FORBIDDEN_DOMAINS
+from .const import FORBIDDEN_DOMAINS, RISKY_COVER_CLASSES, RISKY_SERVICES
 from .tools_home import ToolError
 
 AUTOMATION_FILE = "automations.yaml"
@@ -24,20 +25,44 @@ ALWAYS_OK_DOMAINS = {"notify", "persistent_notification", "tts", "input_number",
                      "input_text", "input_select", "input_datetime", "counter", "timer"}
 
 
-def _called_domains(node: Any) -> set[str]:
-    """Every service domain an action tree calls (action: light.turn_on / service: ...)."""
+SERVICE_NAME_RE = re.compile(r"[a-z0-9_]+\.[a-z0-9_]+", re.IGNORECASE)
+TEMPLATE_KEYS = {"service_template", "action_template"}
+
+
+def _called_services(node: Any) -> set[str]:
+    """Every service an action tree calls (action: light.turn_on / service: ...).
+
+    Raises ToolError for a service name that is computed at run time (a template, a
+    variable), since it can't be checked against the permissions in advance.
+    """
     found: set[str] = set()
     if isinstance(node, dict):
+        if TEMPLATE_KEYS & node.keys():
+            raise ToolError("Automations must name each action directly, not with a template.")
+        if "device_id" in node and "domain" in node and "type" in node \
+                and "condition" not in node and "trigger" not in node:
+            # A device action ({device_id, domain: lock, type: unlock}) calls a service too.
+            found.add(f"{str(node['domain']).lower()}.{str(node['type']).lower()}")
+        if isinstance(node.get("scene"), str):
+            found.add("scene.turn_on")
         for key in ("action", "service"):
             value = node.get(key)
-            if isinstance(value, str) and "." in value:
-                found.add(value.split(".", 1)[0])
+            if value is None:
+                continue
+            if not isinstance(value, str) or not SERVICE_NAME_RE.fullmatch(value.strip()):
+                raise ToolError("Automations must name each action directly, like "
+                                "light.turn_on, not with a template or variable.")
+            found.add(value.strip().lower())
         for value in node.values():
-            found |= _called_domains(value)
+            found |= _called_services(value)
     elif isinstance(node, list):
         for item in node:
-            found |= _called_domains(item)
+            found |= _called_services(item)
     return found
+
+
+def _called_domains(node: Any) -> set[str]:
+    return {svc.split(".", 1)[0] for svc in _called_services(node)}
 
 
 class Automations:
@@ -75,10 +100,35 @@ class Automations:
 
     def _check_actions(self, actions: Any) -> None:
         allowed = self._allowed() | ALWAYS_OK_DOMAINS
-        for domain in _called_domains(actions):
+        services = _called_services(actions)
+        for domain in {svc.split(".", 1)[0] for svc in services}:
             if domain in FORBIDDEN_DOMAINS or domain not in allowed:
                 raise ToolError(f"This automation would control '{domain}', which I'm not "
                                 "allowed to do. The owner can allow it in Nestor's settings.")
+        risky = services & (RISKY_SERVICES | {"alarm_control_panel.disarm", "cover.open"})
+        if risky or self._opens_risky_cover(actions):
+            raise ToolError("For safety I can't create automations that unlock doors, disarm "
+                            "the alarm or open the garage/gate. The owner can create one in "
+                            "Settings > Automations.")
+
+    def _opens_risky_cover(self, node: Any) -> bool:
+        if isinstance(node, list):
+            return any(self._opens_risky_cover(n) for n in node)
+        if not isinstance(node, dict):
+            return False
+        svc = str(node.get("action") or node.get("service") or "").lower()
+        if svc in ("cover.open_cover", "cover.set_cover_position", "cover.toggle"):
+            target = node.get("target") or {}
+            ids = target.get("entity_id") or (node.get("data") or {}).get("entity_id") \
+                or node.get("entity_id") or []
+            ids = [ids] if isinstance(ids, str) else list(ids)
+            if not ids or target.get("area_id") or target.get("device_id") or target.get("floor_id"):
+                return True  # can't tell which covers: treat as risky
+            for eid in ids:
+                st = self.hass.states.get(eid)
+                if st is None or st.attributes.get("device_class") in RISKY_COVER_CLASSES:
+                    return True
+        return any(self._opens_risky_cover(v) for v in node.values())
 
     async def create(self, alias: str, triggers: list, actions: list,
                      description: str = "", conditions: list | None = None,

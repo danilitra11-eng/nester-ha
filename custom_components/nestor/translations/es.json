@@ -61,7 +61,8 @@
       "subscription_inactive": "La suscripción no está activa. Renuévala desde el enlace de tu recibo.",
       "too_many_instances": "Esta clave ya se usa en el máximo de hogares de su plan. Contacta a soporte.",
       "offline": "No se puede conectar con Nestor. Revisa la conexión a internet.",
-      "generic": "Algo salió mal. Inténtalo en un minuto."
+      "generic": "Algo salió mal. Inténtalo en un minuto.",
+      "insecure_url": "La dirección del servicio debe empezar con https:// (http:// solo sirve para un servidor de pruebas en tu red local)."
     },
     "abort": {
       "already_configured": "Nestor ya está configurado. Ve a Ajustes → Dispositivos y servicios → Nestor → Configurar."

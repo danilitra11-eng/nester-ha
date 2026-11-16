@@ -13,7 +13,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import floor_registry as fr
 
-from .const import FORBIDDEN_DOMAINS, PERMISSION_GROUPS
+from .const import FORBIDDEN_DOMAINS, PERMISSION_GROUPS, RISKY_COVER_CLASSES, RISKY_SERVICES
 
 HIDDEN_DOMAINS = {"update", "persistent_notification", "zone", "conversation", "tts", "stt",
                   "wake_word", "event", "image", "camera", "assist_satellite", "ai_task"}
@@ -137,17 +137,7 @@ class HomeTools:
         domain, service = domain.lower(), service.lower()
         if not SERVICE_RE.match(domain) or not SERVICE_RE.match(service):
             raise ToolError("Invalid service name.")
-        if domain in FORBIDDEN_DOMAINS or domain not in allowed:
-            raise ToolError(f"The owner has not allowed controlling '{domain}' devices. They can "
-                            "allow it in Nestor's settings (Settings > Devices & services > "
-                            "Nestor > Configure).")
-        if not entity_ids:
-            raise ToolError("entity_ids must not be empty.")
-        for eid in entity_ids:
-            if eid.split(".", 1)[0] not in allowed:
-                raise ToolError(f"The owner has not allowed controlling {eid}.")
-            if self.hass.states.get(eid) is None:
-                raise ToolError(f"No entity {eid}.")
+        self.check_call(domain, entity_ids, allowed)
         payload = dict(data or {})
         payload.pop("entity_id", None)
         payload["entity_id"] = entity_ids
@@ -161,6 +151,32 @@ class HomeTools:
         changed = [{"entity_id": e, "state": s.state}
                    for e in entity_ids if (s := self.hass.states.get(e))]
         return json.dumps({"ok": True, "now": changed}, ensure_ascii=False)
+
+    def risky_call(self, domain: str, service: str, entity_ids: list[str]) -> str | None:
+        """A short description if this call opens up the home (needs confirmation), else None."""
+        domain, service = str(domain).lower(), str(service).lower()
+        if f"{domain}.{service}" in RISKY_SERVICES:
+            return f"{domain}.{service} on {', '.join(entity_ids)}"
+        if domain == "cover" and service in ("open_cover", "set_cover_position", "toggle"):
+            risky = [e for e in entity_ids if (st := self.hass.states.get(e)) is not None
+                     and st.attributes.get("device_class") in RISKY_COVER_CLASSES]
+            if risky:
+                return f"open {', '.join(risky)}"
+        return None
+
+    def check_call(self, domain: str, entity_ids: list[str], allowed: set[str]) -> None:
+        domain = str(domain).lower()
+        if domain in FORBIDDEN_DOMAINS or domain not in allowed:
+            raise ToolError(f"The owner has not allowed controlling '{domain}' devices. They can "
+                            "allow it in Nestor's settings (Settings > Devices & services > "
+                            "Nestor > Configure).")
+        if not entity_ids:
+            raise ToolError("entity_ids must not be empty.")
+        for eid in entity_ids:
+            if eid.split(".", 1)[0] not in allowed:
+                raise ToolError(f"The owner has not allowed controlling {eid}.")
+            if self.hass.states.get(eid) is None:
+                raise ToolError(f"No entity {eid}.")
 
     # ---- structure tools (permission "structure") ---------------------
 
